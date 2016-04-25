@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import tkinter as tk
 import config as c
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D # Required for projection='3d'!
@@ -74,3 +75,37 @@ ax.set_zticks([])
 #output sounds
 
 #UI for playing music
+numKeys = 9;
+keyWidth = 10;
+keyHeight = 200;
+keyBorder = 5;
+padding = 2;
+
+keys = np.array(['a','s','d','f','g','h','j','k','l'])
+
+def testFunction(n):
+    #simulating and playing a sound goes here
+    print(n);
+
+def onPressed(w):
+    w.invoke(); 
+    w.configure(relief='sunken');
+    
+def onReleased(w):
+    w.configure(relief='raised')
+    
+root = tk.Tk();
+root.geometry(str(numKeys*(keyWidth*8+keyBorder+1)) + "x" + str(keyHeight));
+root.configure(background='#B22222');
+
+for n in range(numKeys):
+    w = tk.Button(root, borderwidth = keyBorder, background='white', height = keyHeight, width=keyWidth, command = (lambda n=n: testFunction(n)));
+    
+    #bind a keypress and release to the button
+    root.bind(keys[n], (lambda event, w=w: onPressed(w)));
+    root.bind("<KeyRelease-" + keys[n] + ">", (lambda event, w=w: onReleased(w)));
+    
+    #place button within the window
+    w.pack(side='left');
+
+root.mainloop();
