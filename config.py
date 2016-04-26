@@ -1,7 +1,9 @@
 import math
 
+
 tension = 670  # String tension [N]
 density = 3.93 /1000/ 0.62;  # Densiuty [kg/m]
+
 c = (tension / density) ** (1 / 2)  # Speed of sound
 eps = 3.82e-5;  # Stiffness
 b1 = 0.5;  # First damping

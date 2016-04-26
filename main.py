@@ -14,13 +14,13 @@ import scipy.sparse
 import scipy.fftpack
 import timeit
 import pyaudio
+from numba import jit
 
 x = np.arange(-c.dx, c.length + 2 * c.dx, c.dx)
 t = np.arange(0, c.tmax + c.dt, c.dt)
 
 # Initiate arrays for deviation and velocity
 dev = np.zeros([len(x), len(t)])
-vel = np.zeros([len(x), len(t)])
 
 ## Initial conditino: Strike string with hammer
 ## Gaussian hammer
@@ -46,21 +46,6 @@ a2 = (-1 + c.b1 * c.dt + 2 * c.b3 / c.dt) / D;
 a3 = (r ** 2 * (1 + 4 * c.eps * (N ** 2))) / D;
 a4 = (c.b3 / c.dt - c.eps * (N ** 2) * (r ** 2)) / D;
 a5 = (- c.b3 / c.dt) / D;
-# Padded!
-diagonals1 = [a1 * np.ones(N), a3 * np.ones(N - 1), a3 * np.ones(N - 1), a4 * np.ones(N - 2), a4 * np.ones(N - 2)]
-diagonals1[0][0] = diagonals1[0][-1] = 0;
-diagonals1[1][0] = diagonals1[2][-1] = 0;
-diagonals1[3][0] = diagonals1[4][-1] = 0;
-A1 = scipy.sparse.diags(diagonals1, [0, 1, -1, 2, -2], format="csr")
-
-diagonals2 = [a2 * np.ones(N), a5 * np.ones(N - 1), a5 * np.ones(N - 1)];
-diagonals2[0][0] = diagonals2[0][-1] = 0;
-diagonals2[1][0] = diagonals2[2][-1] = 0;
-A2 = scipy.sparse.diags(diagonals2, [0, 1, -1], format="csr");
-
-diagonals3 = [a5 * np.ones(N)]
-diagonals3[0][0] = diagonals3[0][-1] = 0;
-A3 = scipy.sparse.diags(diagonals3, [0], format="csr");
 
 # Define spatial extent of hammer
 g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
@@ -72,7 +57,35 @@ dev[:, 0] += g* c.hammerVelocity * c.dt
 dev[:, 1] += g* c.hammerVelocity * c.dt
 dev[:, 2] += g* c.hammerVelocity * c.dt
 
-# THE ITERATORN MWHAUHAHAHAH
+A1 = np.zeros((N,N));
+A2 = np.zeros((N,N));
+A3 = np.zeros((N,N));
+i,j = np.indices(A1.shape);
+
+A1[i==j] = a1;
+A1[i==j-1] = A1[i==j+1] = a3;
+A1[i==j-2] = A1[i==j+2] = a4;
+A1[0,:] = A1[-1,:] = 0;
+
+A2[i==j] = a2;
+A2[i==j-1] = A2[i==j+1] = a5;
+A2[0,:] = A2[-1,:] = 0;
+
+A3[i==j] = a5;
+A3[0,:] = A3[-1,:] = 0;
+
+@jit( nopython=True )
+def iterate(dev1,dev2,dev3,A1,A2,A3):
+    dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
+    # end zero
+    dev[1] = 0;
+    dev[-2] = 0;
+    # 2nd
+    dev[0] = -dev[2];
+    dev[-1] = -dev[-3];    
+    return dev
+
+# Running the simulation
 start = timeit.default_timer()
 for i in range(3, len(t)):
     if hammerInteraction:       
@@ -83,15 +96,11 @@ for i in range(3, len(t)):
         
         if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
             hammerInteraction = False
-
-    dev[:, i] = A1.dot(dev[:, i - 1]) + A2.dot(dev[:, i - 2]) + A3.dot(dev[:, i - 3]);
-    # end zero
-    dev[1, i] = 0;
-    dev[-2, i] = 0;
-    # 2nd
-    dev[0, i] = -dev[2, i];
-    dev[-1, i] = -dev[-3, i];
-    print('Now at ', i + 1, 'of the ', len(t));
+            
+    dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
+    if(i%1000 == 0):
+        print('Now at ', i + 1, 'of the ', len(t));
+    
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
 # Get sound output
