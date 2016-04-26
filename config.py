@@ -13,9 +13,10 @@ dx = 0.09 / 64;  # x element size (m)
 tmax = 5  # Simulated time [s]
 dt = 1 / (96e3);  # Time step [s]
 
-hammerSize = 0.0054 / 2  # Length of string hit by hammer
+hammerSize = 0.001  # Length of string hit by hammer
 hammerVelocity = 1  # Initial velocity of string due to hammer
-hammerLocation = 0.0054  # Distance from the end of the string to hammer striking location
+hammerLocation = 0.2  # Relative distance from the end of the string to hammer striking location
+hammerMass = 0.0049     #Hammer mass in kg
 
 # hammerSize = 0.02                   #Length of string hit by hammer
 # hammerVelocity = 1                  #Initial velocity of string due to hammer

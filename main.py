@@ -21,19 +21,19 @@ t = np.arange(0, c.tmax + c.dt, c.dt)
 dev = np.zeros([len(x), len(t)])
 vel = np.zeros([len(x), len(t)])
 
-# Initial conditino: Strike string with hammer
-# Gaussian hammer
-mean = c.hammerLocation;
-variance = c.hammerSize;
-sigma = math.sqrt(variance);
-vel[:, 0] = c.hammerVelocity * mlab.normpdf(x, mean, sigma);
-# Pulse hammer
-# vel[int(c.hammerLocation/c.length*len(x) ): int((c.hammerLocation+c.hammerSize)/c.length*len(x)), 0] = c.hammerVelocity;
-
-# force for first iteration
-dev[:, 0] += vel[:, 0] * c.dt
-dev[:, 1] += vel[:, 0] * c.dt
-dev[:, 2] += vel[:, 0] * c.dt
+## Initial conditino: Strike string with hammer
+## Gaussian hammer
+#mean = c.hammerLocation;
+#variance = c.hammerSize;
+#sigma = math.sqrt(variance);
+#vel[:, 0] = c.hammerVelocity * mlab.normpdf(x, mean, sigma);
+## Pulse hammer
+## vel[int(c.hammerLocation/c.length*len(x) ): int((c.hammerLocation+c.hammerSize)/c.length*len(x)), 0] = c.hammerVelocity;
+#
+## force for first iteration
+#dev[:, 0] += vel[:, 0] * c.dt
+#dev[:, 1] += vel[:, 0] * c.dt
+#dev[:, 2] += vel[:, 0] * c.dt
 
 # Create matrices
 D = 1 + c.b1 * c.dt + 2 * c.b3 / c.dt;
@@ -61,10 +61,33 @@ diagonals3 = [a5 * np.ones(N)]
 diagonals3[0][0] = diagonals3[0][-1] = 0;
 A3 = scipy.sparse.diags(diagonals3, [0], format="csr");
 
+# Define spatial extent of hammer
+g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
+# Initiate hammer variables
+hammerInteraction = True
+hammerDisplacement = np.zeros([len(t)+1])
+hammerDisplacement[3] = c.hammerVelocity*c.dt
+dev[:, 0] += g* c.hammerVelocity * c.dt
+dev[:, 1] += g* c.hammerVelocity * c.dt
+dev[:, 2] += g* c.hammerVelocity * c.dt
+K=4e8;
+p=2.3;
+
 # THE ITERATORN MWHAUHAHAHAH
 start = timeit.default_timer()
 for i in range(3, len(t)):
+    if hammerInteraction:
+        
+        hammerForce = K* abs(hammerDisplacement[i] - dev[int(c.hammerLocation*len(x)),i])**p
+        hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(c.dt**2*hammerForce)/c.hammerMass
+
+        dev[:,i] += c.dt**2*len(x)*hammerForce*g/(c.density*c.length)
+        
+        if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
+            hammerInteraction = False
+
     dev[:, i] = A1.dot(dev[:, i - 1]) + A2.dot(dev[:, i - 2]) + A3.dot(dev[:, i - 3]);
+    print(np.isnan(dev[:,i]).any())
     # end zero
     dev[1, i] = 0;
     dev[-2, i] = 0;
@@ -75,7 +98,7 @@ for i in range(3, len(t)):
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
 # Get sound output
-audio = dev[int(c.bridgePos / c.length * len(x)), :];
+audio = dev[int(c.bridgePos * len(x) ), :];
 print(len(audio))
 # Normalize and convert
 norm = max(abs(audio));
