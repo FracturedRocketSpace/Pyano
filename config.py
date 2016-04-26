@@ -11,8 +11,9 @@ length = 1                          #String length [m]
 dx = 0.001                          #x element size (m)
 
 tmax = 0.5
-dt = 0.01
+dt = 0.0001
 
 hammerSize = 0.02                   #Length of string hit by hammer
 hammerVelocity = 1                  #Initial velocity of string due to hammer
 hammerLocation = 0.15               #Distance from the end of the string to hammer striking location
+hammerMass = 0.0049                 # hammer mass in kg
