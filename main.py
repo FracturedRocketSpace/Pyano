@@ -142,11 +142,22 @@ stream = p.open(format=p.get_format_from_width(c.format),
 # output sounds
 start = timeit.default_timer()
 stream.write(audio_out)
-print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
+print("Program ended in  =", int(timeit.default_timer() - start), "seconds", flush=True);
 
 # Stop the audio output
 stream.stop_stream()
 stream.close()
+
+print("Calulating spectrum", flush=True)
+spectrum = scipy.fftpack.fft(audio)
+#spectrum = scipy.fftpack.fft(np.sin(2*np.pi*1000*t))
+freq= np.linspace(0,1/(2*c.dt),len(t)/2)
+plt.figure()
+plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+
+plt.xlim(20,10000)
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Intensity (a.u.)")
 
 p.terminate();
 
