@@ -36,15 +36,16 @@ dev = np.zeros([len(x), len(t)])
 #dev[:, 2] += vel[:, 0] * c.dt
 
 # Create matrices
-D = 1 + c.b1 * c.dt + 2 * c.b3 / c.dt;
-r = c.c * c.dt / c.dx;
+la = c.c*c.dt/c.dx;
+mu = c.kap*c.dt/(c.dx**2);
+D = (1+c.b1*c.dt)
 N = len(x)
 
-a1 = (2 - 2 * r ** 2 + c.b3 / c.dt - 6 * c.eps * (N ** 2) * (r ** 2)) / D;
-a2 = (-1 + c.b1 * c.dt + 2 * c.b3 / c.dt) / D;
-a3 = (r ** 2 * (1 + 4 * c.eps * (N ** 2))) / D;
-a4 = (c.b3 / c.dt - c.eps * (N ** 2) * (r ** 2)) / D;
-a5 = (- c.b3 / c.dt) / D;
+a10 = (2 - 2 * la**2 - 6 * mu**2 - 4 * c.b2 * mu / c.kap) / D;
+a11 = (la**2 + 4 * mu**2 + 2 * c.b2 * mu / c.kap) / D;
+a12 = (-mu**2) / D;
+a20 = (-1 + 4 * c.b2 * mu / c.kap + c.b1 * c.dt) / D;
+a21 = (-2 * c.b2 * mu / c.kap) / D;
 
 # Define spatial extent of hammer
 g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
@@ -56,29 +57,42 @@ dev[:, 0] += g* c.hammerVelocity * c.dt
 dev[:, 1] += g* c.hammerVelocity * c.dt
 dev[:, 2] += g* c.hammerVelocity * c.dt
 
+#set boundary conditions
+#padded segments
+dev[0] = 0;
+dev[-1] = 0;
+#edge segments segments
+dev[1] = 0;
+dev[-2] = 0;
+#derivative
+dev[0] = -dev[2];
+dev[-1] = -dev[-3]; 
+
+#compute matrices
 A1 = np.zeros((N,N));
 A2 = np.zeros((N,N));
-A3 = np.zeros((N,N));
 i,j = np.indices(A1.shape);
 
-A1[i==j] = a1;
-A1[i==j-1] = A1[i==j+1] = a3;
-A1[i==j-2] = A1[i==j+2] = a4;
+A1[i==j] = a10;
+A1[i==j-1] = A1[i==j+1] = a11;
+A1[i==j-2] = A1[i==j+2] = a12;
+
+A2[i==j] = a20;
+A2[i==j-1] = A2[i==j+1] = a21;
+
+#keep edges at zero
 A1[0,:] = A1[-1,:] = 0;
+A1[1,:] = A1[-2,:] = 0;
 
-A2[i==j] = a2;
-A2[i==j-1] = A2[i==j+1] = a5;
 A2[0,:] = A2[-1,:] = 0;
-
-A3[i==j] = a5;
-A3[0,:] = A3[-1,:] = 0;
+A2[1,:] = A2[-2,:] = 0;
 
 @jit( nopython=True )
-def iterate(dev1,dev2,dev3,A1,A2,A3):
-    dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
-    # end zero
-    dev[1] = 0;
-    dev[-2] = 0;
+def iterate(dev1,dev2,dev3,A1,A2):
+    dev = np.dot(A1,dev1) + np.dot(A2,dev2);
+    # end zero (not required due to matrix optimizations)
+    #dev[1] = 0;
+    #dev[-2] = 0;
     # 2nd
     dev[0] = -dev[2];
     dev[-1] = -dev[-3];    
@@ -96,7 +110,7 @@ for i in range(3, len(t)):
         if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
             hammerInteraction = False
             
-    dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
+    dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2);
     if(i%1000 == 0):
         print('Now at ', i + 1, 'of the ', len(t));
     
@@ -109,6 +123,10 @@ print(len(audio))
 norm = max(abs(audio));
 audio = audio / norm;
 audio_out = np.array(audio * 127 + 128, dtype=np.int8).view('c');
+
+#spectrum = np.fft.fft(audio);
+
+
 # Init sound
 p = pyaudio.PyAudio()
 # Open stream to audio device

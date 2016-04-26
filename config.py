@@ -1,24 +1,28 @@
 import math
 
-tension = 750  # String tension [N]
-density = 0.460 / 0.09 #/ 1000; SHOULD BE DIVIDED BY 1000, BUT THAT FAILS  #Densiuty [kg/m]
-c = (tension / density) ** (1 / 2)  # Speed of sound
-eps = 8.67e-4;  # Stiffness
-b1 = 0.5;  # First damping
-b3 = 2.6e-10;  # Third damping
+#values for the Stanford method C4
+#using the table form the Stanford paper
+length = 0.63;
+c = 329.6;
+kap = 1.25;
+b1 = 1.1;
+b2 = 2.7e-4;
 
-length = 0.09;  # String length [m]
-dx = 0.09 / 64;  # x element size (m)
+#not from Stanford paper, but should be close to correct!
+density = 3.93 / 0.62 / 1000;
+
+
+dx = length / 50;  # x element size (m)
 
 tmax = 5  # Simulated time [s]
 dt = 1 / (96e3);  # Time step [s]
 
 hammerSize = 0.001  # Length of string hit by hammer
 hammerVelocity = 1  # Initial velocity of string due to hammer
-hammerLocation = 0.2  # Relative distance from the end of the string to hammer striking location
-hammerMass = 0.0049     #Hammer mass in kg
-hammerStiffness = 1e12
-hammerExponent = 3.0
+hammerLocation = 0.12  # Relative distance from the end of the string to hammer striking location
+hammerMass = 0.00297     #Hammer mass in kg
+hammerStiffness = 4.5e9
+hammerExponent = 2.5
 
 # hammerSize = 0.02                   #Length of string hit by hammer
 # hammerVelocity = 1                  #Initial velocity of string due to hammer
