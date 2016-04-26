@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 import math
 import scipy.sparse
+import scipy.fftpack
 import timeit
 import pyaudio
 
@@ -121,6 +122,15 @@ print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 stream.stop_stream()
 stream.close()
 
+spectrum = scipy.fftpack.fft(audio)
+#spectrum = scipy.fftpack.fft(np.sin(2*np.pi*1000*t))
+freq= np.linspace(0,1/(2*c.dt),len(t)/2)
+plt.figure()
+plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+
+plt.xlim(20,10000)
+plt.xlabel("Frequency (Hz)")
+plt.ylabel("Intensity (a.u.)")
 p.terminate();
 
 
