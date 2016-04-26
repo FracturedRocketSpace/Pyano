@@ -1,7 +1,7 @@
 import math
 
 tension = 750  # String tension [N]
-density = 0.460 / 0.09;  # Densiuty [kg/m]
+density = 0.460 / 0.09 #/ 1000; SHOULD BE DIVIDED BY 1000, BUT THAT FAILS  #Densiuty [kg/m]
 c = (tension / density) ** (1 / 2)  # Speed of sound
 eps = 8.67e-4;  # Stiffness
 b1 = 0.5;  # First damping
