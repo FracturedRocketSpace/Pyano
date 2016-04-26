@@ -70,15 +70,12 @@ hammerDisplacement[3] = c.hammerVelocity*c.dt
 dev[:, 0] += g* c.hammerVelocity * c.dt
 dev[:, 1] += g* c.hammerVelocity * c.dt
 dev[:, 2] += g* c.hammerVelocity * c.dt
-K=4e8;
-p=2.3;
 
 # THE ITERATORN MWHAUHAHAHAH
 start = timeit.default_timer()
 for i in range(3, len(t)):
-    if hammerInteraction:
-        
-        hammerForce = K* abs(hammerDisplacement[i] - dev[int(c.hammerLocation*len(x)),i])**p
+    if hammerInteraction:       
+        hammerForce = c.hammerStiffness* abs(hammerDisplacement[i] - dev[int(c.hammerLocation*len(x)),i])**c.hammerExponent
         hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(c.dt**2*hammerForce)/c.hammerMass
 
         dev[:,i] += c.dt**2*len(x)*hammerForce*g/(c.density*c.length)
@@ -87,7 +84,6 @@ for i in range(3, len(t)):
             hammerInteraction = False
 
     dev[:, i] = A1.dot(dev[:, i - 1]) + A2.dot(dev[:, i - 2]) + A3.dot(dev[:, i - 3]);
-    print(np.isnan(dev[:,i]).any())
     # end zero
     dev[1, i] = 0;
     dev[-2, i] = 0;

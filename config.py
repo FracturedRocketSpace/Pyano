@@ -17,6 +17,8 @@ hammerSize = 0.001  # Length of string hit by hammer
 hammerVelocity = 1  # Initial velocity of string due to hammer
 hammerLocation = 0.2  # Relative distance from the end of the string to hammer striking location
 hammerMass = 0.0049     #Hammer mass in kg
+hammerStiffness = 1e12
+hammerExponent = 3.0
 
 # hammerSize = 0.02                   #Length of string hit by hammer
 # hammerVelocity = 1                  #Initial velocity of string due to hammer
