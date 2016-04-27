@@ -18,6 +18,7 @@ from config import selectParameters
 import locale
 locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
+from multiprocessing import Process
 
 def simulate(note):
     #note = input("input note")
@@ -138,44 +139,45 @@ charHeight = 15;
 keyBorder = 5;
 padding = 2;
 
-def testFunction(n):
-    #simulating and playing a sound goes here
-    print(n);
-
-def onPressed(w):
-    w.invoke();
-    w.configure(relief='sunken');
-
-def onReleased(w):
-    w.configure(relief='raised')
-
-root = tk.Tk();
-root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
-root.configure(background='#B22222');
-
-#white keys
-for n in range(numWhiteKeys):
-    w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: simulate(whiteNotes[n])));
-
-    #bind a keypress and release to the button
-    root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
-    root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
-
-    #place button within the window
-    w.pack(side='left');
+if __name__ == '__main__':
+    def buttonPressed(n):
+        p = Process(target=simulate, args=(n,));
+        p.start();
     
-#black keys for middle C upwards
-currentKey = 0;
-for n in range(numWhiteKeys-1):
-    #if there is a black note between the white notes
-    if(whiteNotes[n+1] - whiteNotes[n] != 1):
-        w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: simulate(blackNotes[n])));
+    def onPressed(w):
+        w.invoke();
+        w.configure(relief='sunken');
+    
+    def onReleased(w):
+        w.configure(relief='raised')
+    
+    root = tk.Tk();
+    root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
+    root.configure(background='#B22222');
+    
+    #white keys
+    for n in range(numWhiteKeys):
+        w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n])));
     
         #bind a keypress and release to the button
-        root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
-        root.bind("<KeyRelease-" + blackKeys[currentKey] + ">", (lambda event, w=w: onReleased(w))); 
-        currentKey += 1;
+        root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
+        root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
+    
+        #place button within the window
+        w.pack(side='left');
         
-        w.place(relx=(n+1)/numWhiteKeys, rely=0.5, anchor='s');
-
-root.mainloop();
+    #black keys for middle C upwards
+    currentKey = 0;
+    for n in range(numWhiteKeys-1):
+        #if there is a black note between the white notes
+        if(whiteNotes[n+1] - whiteNotes[n] != 1):
+            w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(blackNotes[n])));
+        
+            #bind a keypress and release to the button
+            root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
+            root.bind("<KeyRelease-" + blackKeys[currentKey] + ">", (lambda event, w=w: onReleased(w))); 
+            currentKey += 1;
+            
+            w.place(relx=(n+1)/numWhiteKeys, rely=0.5, anchor='s');
+    
+    root.mainloop();
