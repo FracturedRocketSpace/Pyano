@@ -116,9 +116,9 @@ for i in range(3, len(t)):
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
 # Get sound output
-audio = dev[int(c.bridgePos * len(x) ), 0::int(c.framerate/44100)];
+audio = dev[int(c.bridgePos * len(x) ), 0::math.ceil(c.framerate/44100)];
 print(len(audio))
-t=t[0::int(c.framerate/44100)]
+t=t[0::math.ceil(c.framerate/44100)]
 # Normalize and convert
 norm = max(abs(audio));
 audio = audio / norm;

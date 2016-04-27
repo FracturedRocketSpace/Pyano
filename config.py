@@ -15,7 +15,7 @@ density = 3.93 / 0.62 / 1000;
 dx = length / 50;  # x element size (m)
 
 tmax = 5  # Simulated time [s]
-dt = 1 / (96e3);  # Time step [s]
+dt = 1 / (32e3);  # Time step [s]
 
 hammerSize = 0.001  # Length of string hit by hammer
 hammerVelocity = 1  # Initial velocity of string due to hammer
