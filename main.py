@@ -20,6 +20,17 @@ locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
 from multiprocessing import Process
 
+@jit( nopython=True )
+def iterate(dev1,dev2,dev3,A1,A2,A3):
+    dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
+    # end zero
+    dev[1] = 0;
+    dev[-2] = 0;
+    # 2nd
+    dev[0] = -dev[2];
+    dev[-1] = -dev[-3];    
+    return dev
+
 def simulate(note):
     #note = input("input note")
     length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
@@ -68,18 +79,6 @@ def simulate(note):
     
     A3[i==j] = a5;
     A3[0,:] = A3[-1,:] = 0;
-    
-    @jit( nopython=True )
-    def iterate(dev1,dev2,dev3,A1,A2,A3):
-        dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
-        # end zero
-        dev[1] = 0;
-        dev[-2] = 0;
-        # 2nd
-        dev[0] = -dev[2];
-        dev[-1] = -dev[-3];    
-        return dev
-
     #
     streamer = sd.OutputStream(channels=1, dtype='float32');
     CHUNK = streamer.write_available - 1
@@ -118,38 +117,38 @@ def plotSpectrum(audio, dt, t):
     plt.xlim(20,10000)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Intensity (a.u.)")
-
-#UI for playing music
-whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
-blackKeys = np.array(['w','e','t','y','u']);
-
-whiteNotes = np.array([40,42,44,45,47,49,51,52]);
-blackNotes = np.array([41,43,46,48,50])
-
-numWhiteKeys = len(whiteNotes);
-whiteKeyWidth = 10;
-blackKeyWidth = int(whiteKeyWidth/2);
-whiteKeyHeight = 25;
-blackKeyHeight = int(whiteKeyHeight/2);
-
-#experimentally determined values for char to pixel size conversion
-charWidth = 7;
-charHeight = 15;
-
-keyBorder = 5;
-padding = 2;
-
-if __name__ == '__main__':
-    def buttonPressed(n):
-        p = Process(target=simulate, args=(n,));
-        p.start();
     
-    def onPressed(w):
-        w.invoke();
-        w.configure(relief='sunken');
+def buttonPressed(n):
+    print(n);
+    p = Process(target=simulate, args=(n,));
+    p.start();
+
+def onPressed(w):
+    w.invoke();
+    w.configure(relief='sunken');
+
+def onReleased(w):
+    w.configure(relief='raised')
+
+if __name__ == '__main__':    
+    #UI for playing music
+    whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
+    blackKeys = np.array(['w','e','t','y','u']);
     
-    def onReleased(w):
-        w.configure(relief='raised')
+    whiteNotes = np.array([40,42,44,45,47,49,51,52]);
+    
+    numWhiteKeys = len(whiteNotes);
+    whiteKeyWidth = 10;
+    blackKeyWidth = int(whiteKeyWidth/2);
+    whiteKeyHeight = 25;
+    blackKeyHeight = int(whiteKeyHeight/2);
+    
+    #experimentally determined values for char to pixel size conversion
+    charWidth = 7;
+    charHeight = 15;
+    
+    keyBorder = 5;
+    padding = 2;
     
     root = tk.Tk();
     root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
@@ -171,7 +170,7 @@ if __name__ == '__main__':
     for n in range(numWhiteKeys-1):
         #if there is a black note between the white notes
         if(whiteNotes[n+1] - whiteNotes[n] != 1):
-            w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(blackNotes[n])));
+            w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n]+1)));
         
             #bind a keypress and release to the button
             root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
