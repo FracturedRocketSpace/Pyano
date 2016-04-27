@@ -57,6 +57,14 @@ audio_tot = np.sin( (2*np.pi)*frequency * t );
 sd.play(audio_tot, framerate)
 sd.wait()
 
+#
+print('Two sounds')
+audio_tot2 = np.sin( (2*np.pi)*frequency*2 * t );
+sd.play(audio_tot, framerate)
+sd.play(audio_tot2, framerate)
+sd.wait()
+
+
 # Stop the audio output
 stream.stop_stream()
 stream.close()

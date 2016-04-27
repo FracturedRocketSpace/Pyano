@@ -40,10 +40,7 @@ g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
 # Initiate hammer variables
 hammerInteraction = True
 hammerDisplacement = np.zeros([len(t)+1])
-hammerDisplacement[3] = c.hammerVelocity*c.dt
-dev[:, 0] += g* c.hammerVelocity * c.dt
-dev[:, 1] += g* c.hammerVelocity * c.dt
-dev[:, 2] += g* c.hammerVelocity * c.dt
+hammerDisplacement[10] = c.hammerVelocity*c.dt
 
 A1 = np.zeros((N,N), dtype=np.float32);
 A2 = np.zeros((N,N), dtype=np.float32);
@@ -78,16 +75,20 @@ bridge = int(c.bridgePos * len(x));
 
 # Set samplerate
 sd.default.samplerate = c.framerate;
+sd.default.latency = 'high'
 st = 0
-streamer = sd.OutputStream(channels=1);
+streamer = sd.OutputStream(channels=1, dtype='float32');
+CHUNK = streamer.write_available - 1
 streamer.start()
+streamer2 = sd.OutputStream(channels=1, dtype='float32');
+streamer2.start()
 
 # Running the simulation
 
 start = timeit.default_timer()
 st=0;
 for i in range(3, len(t)):
-    if hammerInteraction:       
+    if hammerInteraction and hammerDisplacement[i]>0:
         hammerForce = c.hammerStiffness* abs(hammerDisplacement[i] - dev[int(c.hammerLocation*len(x)),i])**c.hammerExponent
         hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(c.dt**2*hammerForce)/c.hammerMass
 
@@ -96,10 +97,11 @@ for i in range(3, len(t)):
         if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
             hammerInteraction = False
             
-    dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
+    dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
 
-    if((i+1)%c.CHUNK == 0):
+    if((i+1)%CHUNK == 0):
         streamer.write(dev[bridge, st:i]/c.norm)
+        streamer2.write(dev[bridge*3, st:i] / c.norm)
         st=i;
         print('Now at ', i + 1, 'of the ', len(t));
 
@@ -107,6 +109,7 @@ for i in range(3, len(t)):
 
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
+sd.wait()
 start = timeit.default_timer()
 audio=dev[bridge,:]
 norm=max(audio);

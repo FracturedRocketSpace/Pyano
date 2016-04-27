@@ -13,7 +13,7 @@ length = 0.62;  # String length [m]
 dx = 0.62 / 25;  # x element size (m)
 
 tmax = 5  # Simulated time [s]
-dt = 1 / (32e3);  # Time step [s]
+dt = 1 / (24e3);  # Time step [s]
 
 hammerSize = 0.001  # Length of string hit by hammer
 hammerVelocity = 1  # Initial velocity of string due to hammer
@@ -24,8 +24,8 @@ hammerExponent = 2.5
 
 bridgePos = hammerLocation / 2;
 format = 1;  # DUnno what this means
-CHUNK = 2 * 1024 - 1  # CHUNK load size
+#CHUNK = 2 * 1024 - 1  # CHUNK load size
 numChannels = 1;  # = Mono
 framerate = int(1 / dt);
 
-norm = 1e-5;
+norm = 5e-3;
