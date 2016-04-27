@@ -30,6 +30,7 @@ import math
 format = 1;  # DUnno what this means
 CHUNK = 5 * 1024  # CHUNK load size
 numChannels = 1;  # = Mono
+norm = 5e-4;
 
 def selectParameters(note):    
     youngMod = 2e11
