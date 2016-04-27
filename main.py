@@ -42,11 +42,9 @@ def simulate(note):
     
     # Define spatial extent of hammer
     #GAUSS
-    g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))
+    g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))    
+    g[0]=0; g[-1]=0;
     
-    plt.plot(x,g)
-    
-#    g[0]=0; g[-1]=0;
     # Initiate hammer variables
     hammerInteraction = True
     hammerDisplacement = np.zeros([len(t)+1])
