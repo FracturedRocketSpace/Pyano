@@ -1,7 +1,6 @@
 import math
 
 format = 1;  # DUnno what this means
-CHUNK = 5 * 1024  # CHUNK load size
 numChannels = 1;  # = Mono
 
 norm = 5e-4
@@ -10,11 +9,13 @@ def selectParameters(note):
     youngMod = 2e11
     rho = 7850
     b1 = 0.5;
+    b2 = 2.7e-4
     b3 = 1e-9 #6.25e-9
     tmax = 1
     Fs = 64e3
     hammerSize = 0.01
     hammerVelocity = 1
+    kap = 1.25
     
     if (note==40):
         # C4
@@ -278,5 +279,5 @@ def selectParameters(note):
     else:
         print ("Error: Unknown note")
         
-    return length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
+    return length, tension, b1, b2, b3, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
     
