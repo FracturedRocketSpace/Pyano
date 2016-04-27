@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.mlab as mlab
 import math
 import scipy.sparse
+import scipy.fftpack
 import timeit
 import pyaudio
 from numba import jit
@@ -53,9 +54,7 @@ g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
 hammerInteraction = True
 hammerDisplacement = np.zeros([len(t)+1])
 hammerDisplacement[3] = c.hammerVelocity*c.dt
-dev[:, 0] += g* c.hammerVelocity * c.dt
-dev[:, 1] += g* c.hammerVelocity * c.dt
-dev[:, 2] += g* c.hammerVelocity * c.dt
+
 
 #set boundary conditions
 #padded segments
@@ -110,15 +109,16 @@ for i in range(3, len(t)):
         if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
             hammerInteraction = False
             
-    dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2);
+    dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2);
     if(i%1000 == 0):
         print('Now at ', i + 1, 'of the ', len(t));
     
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
 # Get sound output
-audio = dev[int(c.bridgePos * len(x) ), :];
+audio = dev[int(c.bridgePos * len(x) ), 0::int(c.framerate/44100)];
 print(len(audio))
+t=t[0::int(c.framerate/44100)]
 # Normalize and convert
 norm = max(abs(audio));
 audio = audio / norm;
@@ -136,7 +136,7 @@ p = pyaudio.PyAudio()
 # Output: True of course as we want output
 stream = p.open(format=p.get_format_from_width(c.format),
                 channels=c.numChannels,
-                rate=c.framerate,
+                rate=44100,
                 output=True)
 
 # output sounds
@@ -151,7 +151,7 @@ stream.close()
 print("Calulating spectrum", flush=True)
 spectrum = scipy.fftpack.fft(audio)
 #spectrum = scipy.fftpack.fft(np.sin(2*np.pi*1000*t))
-freq= np.linspace(0,1/(2*c.dt),len(t)/2)
+freq= np.linspace(0,1/(2*c.framerate/44100*c.dt),len(t)/2)
 plt.figure()
 plt.plot(freq, np.abs(spectrum[:len(t)/2]))
 
