@@ -12,11 +12,9 @@ import sounddevice as sd
 from multiprocessing import Pool
 
 @jit( nopython=True )
-def iterate(dev1,dev2,dev3,A1,A2,A3):
-    dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
-    # end zero
-    dev[1] = 0;
-    dev[-2] = 0;
+def iterate(dev1,dev2,dev3,A1,A2):
+    dev = np.dot(A1,dev1) + np.dot(A2,dev2);
+
     # 2nd
     dev[0] = -dev[2];
     dev[-1] = -dev[-3];    
@@ -24,7 +22,10 @@ def iterate(dev1,dev2,dev3,A1,A2,A3):
 
 def simulate(note):
     #note = input("input note")
-    length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
+    length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
+    
+    #set small x for speed purposes    
+    dx = length/16
     
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
@@ -33,15 +34,16 @@ def simulate(note):
     dev = np.zeros([len(x), len(t)], dtype='float32')
     
     # Create matrices
-    D = 1 + b1 * dt + 2 * b3 / dt;
-    r = vel * dt / dx;
+    la = vel*dt/dx;
+    mu = kap*dt/(dx**2);
+    D = (1+b1*dt)
     N = len(x)
     
-    a1 = (2 - 2 * r ** 2 + b3 / dt - 6 * eps * (N ** 2) * (r ** 2)) / D;
-    a2 = (-1 + b1 * dt + 2 * b3 / dt) / D;
-    a3 = (r ** 2 * (1 + 4 * eps * (N ** 2))) / D;
-    a4 = (b3 / dt - eps * (N ** 2) * (r ** 2)) / D;
-    a5 = (- b3 / dt) / D;
+    a10 = (2 - 2 * la**2 - 6 * mu**2 - 4 * b2 * mu / kap) / D;
+    a11 = (la**2 + 4 * mu**2 + 2 * b2 * mu / kap) / D;
+    a12 = (-mu**2) / D;
+    a20 = (-1 + 4 * b2 * mu / kap + b1 * dt) / D;
+    a21 = (-2 * b2 * mu / kap) / D;
     
     # Define spatial extent of hammer
     #GAUSS
@@ -53,22 +55,24 @@ def simulate(note):
     hammerDisplacement = np.zeros([len(t)+1])
     hammerDisplacement[3] = hammerVelocity*dt
     
-    A1 = np.zeros((N,N), dtype='float32');
-    A2 = np.zeros((N,N), dtype='float32');
-    A3 = np.zeros((N,N), dtype='float32');
+    #compute matrices
+    A1 = np.zeros((N,N),dtype = 'float32');
+    A2 = np.zeros((N,N),dtype = 'float32');
     i,j = np.indices(A1.shape);
     
-    A1[i==j] = a1;
-    A1[i==j-1] = A1[i==j+1] = a3;
-    A1[i==j-2] = A1[i==j+2] = a4;
+    A1[i==j] = a10;
+    A1[i==j-1] = A1[i==j+1] = a11;
+    A1[i==j-2] = A1[i==j+2] = a12;
+    
+    A2[i==j] = a20;
+    A2[i==j-1] = A2[i==j+1] = a21;
+    
+    #keep edges at zero
     A1[0,:] = A1[-1,:] = 0;
+    A1[1,:] = A1[-2,:] = 0;
     
-    A2[i==j] = a2;
-    A2[i==j-1] = A2[i==j+1] = a5;
     A2[0,:] = A2[-1,:] = 0;
-    
-    A3[i==j] = a5;
-    A3[0,:] = A3[-1,:] = 0;
+    A2[1,:] = A2[-2,:] = 0;
     #
     streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
     CHUNK = max([streamer.write_available - 1,c.minCHUNK])
@@ -88,12 +92,11 @@ def simulate(note):
             if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
                 hammerInteraction = False
                 
-        dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
+        dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2);
 
         if ((i + 1) % CHUNK == 0):
             if(st==0):
                 norm = max(abs(dev[bridgePos, st:i]));
-
             streamer.write(dev[bridgePos, st:i] / norm);
             st = i;
     print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds");

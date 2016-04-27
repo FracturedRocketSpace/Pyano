@@ -8,11 +8,12 @@ def selectParameters(note):
     youngMod = 2e11
     rho = 7850
     b1 = 0.5;
-    b3 = 1e-9 #6.25e-9
+    b2 = 2.7e-4
     tmax = 1
-    Fs = 64e3
+    Fs =int(20e3)
     hammerSize = 0.01
     hammerVelocity = 1
+    kap = 1.25
     
     if (note==40):
         # C4
@@ -276,5 +277,5 @@ def selectParameters(note):
     else:
         print ("Error: Unknown note")
         
-    return length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
+    return length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
     
