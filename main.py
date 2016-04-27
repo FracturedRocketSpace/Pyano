@@ -1,15 +1,6 @@
 import numpy as np
-import math
 import tkinter as tk
 import config as c
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # Required for projection='3d'!
-from matplotlib import cm
-from matplotlib import animation
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.mlab as mlab
-import math
 import scipy.sparse
 import scipy.fftpack
 import timeit
@@ -60,7 +51,6 @@ def simulate(note):
     # Initiate hammer variables
     hammerInteraction = True
     hammerDisplacement = np.zeros([len(t)+1])
-
     hammerDisplacement[3] = hammerVelocity*dt
     
     A1 = np.zeros((N,N), dtype='float32');
@@ -80,10 +70,10 @@ def simulate(note):
     A3[i==j] = a5;
     A3[0,:] = A3[-1,:] = 0;
     #
-    streamer = sd.OutputStream(channels=1, dtype='float32');
-    CHUNK = streamer.write_available - 1
+    streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
+    CHUNK = max([streamer.write_available - 1,c.minCHUNK])
     streamer.start()
-    bridgePos = .5
+    bridgePos = int(.5*len(x))
     
     # Running the simulation
     start = timeit.default_timer()
@@ -101,36 +91,39 @@ def simulate(note):
         dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
 
         if ((i + 1) % CHUNK == 0):
-            streamer.write(dev[bridgePos, st:i] / c.norm)
+            if(st==0):
+                norm = max(abs(dev[bridgePos, st:i]));
+
+            streamer.write(dev[bridgePos, st:i] / norm);
             st = i;
-            print('Now at ', i + 1, 'of the ', len(t));
+    print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds");
+
+if __name__ == '__main__':
+    # Functions
+    def plotSpectrum(audio, dt, t):
+        import matplotlib.pyplot as plt
+        print("Calculating and plotting spectrum", flush=True)
+        spectrum = scipy.fftpack.fft(audio)
+        freq= np.linspace(0,1/(2*dt),len(t)/2)
+        plt.figure()
+        plt.plot(freq, np.abs(spectrum[:len(t)/2]))
         
-    print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
-
-def plotSpectrum(audio, dt, t):
-    print("Calculating and plotting spectrum", flush=True)
-    spectrum = scipy.fftpack.fft(audio)
-    freq= np.linspace(0,1/(2*dt),len(t)/2)
-    plt.figure()
-    plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+        plt.xlim(20,10000)
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("Intensity (a.u.)")
+        
+    def buttonPressed(n):
+        print(n);
+        p = Process(target=simulate, args=(n,));
+        p.start();
     
-    plt.xlim(20,10000)
-    plt.xlabel("Frequency (Hz)")
-    plt.ylabel("Intensity (a.u.)")
+    def onPressed(w):
+        w.invoke();
+        w.configure(relief='sunken');
     
-def buttonPressed(n):
-    print(n);
-    p = Process(target=simulate, args=(n,));
-    p.start();
-
-def onPressed(w):
-    w.invoke();
-    w.configure(relief='sunken');
-
-def onReleased(w):
-    w.configure(relief='raised')
-
-if __name__ == '__main__':    
+    def onReleased(w):
+        w.configure(relief='raised')    
+    
     #UI for playing music
     whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
     blackKeys = np.array(['w','e','t','y','u']);
