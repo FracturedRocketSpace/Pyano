@@ -3,13 +3,15 @@ import math
 format = 1;  # DUnno what this means
 minCHUNK = 1024  # CHUNK load size
 numChannels = 1;  # = Mono
+numProcesses = 8;
+bridgePos = -3;
 
 def selectParameters(note):    
     youngMod = 2e11
     rho = 7850
     b1 = 0.5;
     b2 = 2.7e-4
-    tmax = 1
+    tmax = 3;
     Fs =int(20e3)
     hammerSize = 0.01
     hammerVelocity = 1
