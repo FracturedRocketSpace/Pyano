@@ -13,9 +13,11 @@ import math
 import scipy.sparse
 import scipy.fftpack
 import timeit
-import pyaudio
 from numba import jit
 from config import selectParameters
+import locale
+locale.setlocale(locale.LC_NUMERIC, 'C')
+import sounddevice as sd
 
 def simulate(note):
     #note = input("input note")
@@ -25,8 +27,8 @@ def simulate(note):
     t = np.arange(0, tmax + dt, dt)
     
     # Initiate arrays for deviation and velocity
-    dev = np.zeros([len(x), len(t)])
-       
+    dev = np.zeros([len(x), len(t)], dtype='float32')
+    
     # Create matrices
     D = 1 + b1 * dt + 2 * b3 / dt;
     r = vel * dt / dx;
@@ -48,11 +50,12 @@ def simulate(note):
     # Initiate hammer variables
     hammerInteraction = True
     hammerDisplacement = np.zeros([len(t)+1])
+
     hammerDisplacement[3] = hammerVelocity*dt
     
-    A1 = np.zeros((N,N));
-    A2 = np.zeros((N,N));
-    A3 = np.zeros((N,N));
+    A1 = np.zeros((N,N), dtype='float32');
+    A2 = np.zeros((N,N), dtype='float32');
+    A3 = np.zeros((N,N), dtype='float32');
     i,j = np.indices(A1.shape);
     
     A1[i==j] = a1;
@@ -77,9 +80,16 @@ def simulate(note):
         dev[0] = -dev[2];
         dev[-1] = -dev[-3];    
         return dev
+
+    #
+    streamer = sd.OutputStream(channels=1, dtype='float32');
+    CHUNK = streamer.write_available - 1
+    streamer.start()
+    bridgePos = .5
     
     # Running the simulation
     start = timeit.default_timer()
+    st = 0;
     for i in range(3, len(t)):
         if hammerInteraction:       
             hammerForce = hammerStiffness* abs(hammerDisplacement[i] - dev[int(hammerLocation*len(x)),i])**hammerExponent
@@ -91,45 +101,17 @@ def simulate(note):
                 hammerInteraction = False
                 
         dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
-        if(i%1000 == 0):
+
+        if ((i + 1) % CHUNK == 0):
+            streamer.write(dev[bridgePos, st:i] / c.norm)
+            st = i;
             print('Now at ', i + 1, 'of the ', len(t));
         
     print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
-    
-    # Get sound output
-    bridgePos=.75
-    audio = dev[int(bridgePos * len(x) ), :];
-    print(len(audio))
-    # Normalize and convert
-    norm = max(abs(audio));
-    audio = audio / norm;
-    audio_out = np.array(audio * 127 + 128, dtype=np.int8).view('c');
-    # Init sound
-    p = pyaudio.PyAudio()
-    # Open stream to audio device
-    # Format: Array type. Int32 or float32 for example. 1 = float32?
-    # Channels. Number of channels. 1=mono, 2=stereo
-    # Rate: The sampling rate
-    # Output: True of course as we want output
-    stream = p.open(format=p.get_format_from_width(c.format),
-                    channels=c.numChannels,
-                    rate=int(Fs),
-                    output=True)
-    
-    # output sounds
-    start = timeit.default_timer()
-    stream.write(audio_out)
-    print("Program ended in  =", int(timeit.default_timer() - start), "seconds", flush=True);
-    
-    # Stop the audio output
-    stream.stop_stream()
-    stream.close()
-    p.terminate();
 
 def plotSpectrum(audio, dt, t):
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
-    #spectrum = scipy.fftpack.fft(np.sin(2*np.pi*1000*t))
     freq= np.linspace(0,1/(2*dt),len(t)/2)
     plt.figure()
     plt.plot(freq, np.abs(spectrum[:len(t)/2]))
@@ -137,7 +119,6 @@ def plotSpectrum(audio, dt, t):
     plt.xlim(20,10000)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Intensity (a.u.)")
-    
 
 #UI for playing music
 whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
