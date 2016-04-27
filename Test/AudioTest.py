@@ -2,13 +2,14 @@ import pyaudio
 import numpy as np
 import sys
 import timeit
+import sounddevice as sd
 
 
 # Settings
 CHUNK = 5*1024
 numChannels = 1;
 framerate = 44100;
-length = 5; # Num seconds
+length = 2.5; # Num seconds
 frequency = 2109.89; # Hz
 
 # Create time
@@ -50,6 +51,11 @@ while(end<=framerate*length):
     stream.write(data)
 
 print("Program ended in  =", int(timeit.default_timer() - startT), "seconds");
+#
+print('Sound device')
+audio_tot = np.sin( (2*np.pi)*frequency * t );
+sd.play(audio_tot, framerate)
+sd.wait()
 
 # Stop the audio output
 stream.stop_stream()
