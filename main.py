@@ -144,43 +144,6 @@ plt.xlabel("Frequency (Hz)")
 plt.ylabel("Intensity (a.u.)")
 p.terminate();
 
-
-#UI for playing music
-# numKeys = 9;
-# keyWidth = 10;
-# keyHeight = 200;
-# keyBorder = 5;
-# padding = 2;
-#
-# keys = np.array(['a','s','d','f','g','h','j','k','l'])
-#
-# def testFunction(n):
-#     #simulating and playing a sound goes here
-#     print(n);
-#
-# def onPressed(w):
-#     w.invoke();
-#     w.configure(relief='sunken');
-#
-# def onReleased(w):
-#     w.configure(relief='raised')
-#
-# root = tk.Tk();
-# root.geometry(str(numKeys*(keyWidth*8+keyBorder+1)) + "x" + str(keyHeight));
-# root.configure(background='#B22222');
-#
-# for n in range(numKeys):
-#     w = tk.Button(root, borderwidth = keyBorder, background='white', height = keyHeight, width=keyWidth, command = (lambda n=n: testFunction(n)));
-#
-#     #bind a keypress and release to the button
-#     root.bind(keys[n], (lambda event, w=w: onPressed(w)));
-#     root.bind("<KeyRelease-" + keys[n] + ">", (lambda event, w=w: onReleased(w)));
-#
-#     #place button within the window
-#     w.pack(side='left');
-#
-# root.mainloop();
-
 # plot/animate results: string animation, frequency spectrum
 X, T = np.meshgrid(x, t)
 
@@ -199,3 +162,64 @@ X, T = np.meshgrid(x, t)
 plt.figure()
 plt.plot(t, audio * 127)
 plt.show()
+
+#UI for playing music
+whiteKeys = np.array(['a','s','d','f','g','h','j']);
+blackKeys = np.array(['w','e','t','y','u']);
+
+whiteNotes = np.array([40,42,44,45,47,49,51]);
+
+numWhiteKeys = len(whiteNotes);
+whiteKeyWidth = 10;
+blackKeyWidth = int(whiteKeyWidth/2);
+whiteKeyHeight = 25;
+blackKeyHeight = int(whiteKeyHeight/2);
+
+#experimentally determined values for char to pixel size conversion
+charWidth = 7;
+charHeight = 15;
+
+keyBorder = 5;
+padding = 2;
+
+def testFunction(n):
+    #simulating and playing a sound goes here
+    print(n);
+
+def onPressed(w):
+    w.invoke();
+    w.configure(relief='sunken');
+
+def onReleased(w):
+    w.configure(relief='raised')
+
+root = tk.Tk();
+root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
+root.configure(background='#B22222');
+
+#white keys
+for n in range(numWhiteKeys):
+    w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: testFunction(whiteNotes[n])));
+
+    #bind a keypress and release to the button
+    root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
+    root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
+
+    #place button within the window
+    w.pack(side='left');
+    
+#black keys for middle C upwards
+currentKey = 0;
+for n in range(numWhiteKeys-1):
+    #if there is a black note between the white notes
+    if(whiteNotes[n+1] - whiteNotes[n] != 1):
+        w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: testFunction(whiteNotes[n]+1)));
+    
+        #bind a keypress and release to the button
+        root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
+        root.bind("<KeyRelease-" + blackKeys[currentKey] + ">", (lambda event, w=w: onReleased(w))); 
+        currentKey += 1;
+        
+        w.place(relx=(n+1)/numWhiteKeys, rely=0.5, anchor='s');
+
+root.mainloop();
