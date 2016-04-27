@@ -15,9 +15,14 @@ import scipy.fftpack
 import timeit
 import pyaudio
 from numba import jit
+from config import selectParameters
 
-x = np.arange(-c.dx, c.length + 2 * c.dx, c.dx)
-t = np.arange(0, c.tmax + c.dt, c.dt)
+
+note = input("input note")
+length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
+
+x = np.arange(-dx, length + 2 * dx, dx)
+t = np.arange(0, tmax + dt, dt)
 
 # Initiate arrays for deviation and velocity
 dev = np.zeros([len(x), len(t)])
@@ -37,25 +42,25 @@ dev = np.zeros([len(x), len(t)])
 #dev[:, 2] += vel[:, 0] * c.dt
 
 # Create matrices
-D = 1 + c.b1 * c.dt + 2 * c.b3 / c.dt;
-r = c.c * c.dt / c.dx;
+D = 1 + b1 * dt + 2 * b3 / dt;
+r = vel * dt / dx;
 N = len(x)
 
-a1 = (2 - 2 * r ** 2 + c.b3 / c.dt - 6 * c.eps * (N ** 2) * (r ** 2)) / D;
-a2 = (-1 + c.b1 * c.dt + 2 * c.b3 / c.dt) / D;
-a3 = (r ** 2 * (1 + 4 * c.eps * (N ** 2))) / D;
-a4 = (c.b3 / c.dt - c.eps * (N ** 2) * (r ** 2)) / D;
-a5 = (- c.b3 / c.dt) / D;
+a1 = (2 - 2 * r ** 2 + b3 / dt - 6 * eps * (N ** 2) * (r ** 2)) / D;
+a2 = (-1 + b1 * dt + 2 * b3 / dt) / D;
+a3 = (r ** 2 * (1 + 4 * eps * (N ** 2))) / D;
+a4 = (b3 / dt - eps * (N ** 2) * (r ** 2)) / D;
+a5 = (- b3 / dt) / D;
 
 # Define spatial extent of hammer
-g = np.exp(- (x-c.hammerLocation*c.length)**2/ (2*c.hammerSize**2))
+g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))
 # Initiate hammer variables
 hammerInteraction = True
 hammerDisplacement = np.zeros([len(t)+1])
-hammerDisplacement[3] = c.hammerVelocity*c.dt
-dev[:, 0] += g* c.hammerVelocity * c.dt
-dev[:, 1] += g* c.hammerVelocity * c.dt
-dev[:, 2] += g* c.hammerVelocity * c.dt
+hammerDisplacement[3] = hammerVelocity*dt
+dev[:, 0] += g* hammerVelocity * dt
+dev[:, 1] += g* hammerVelocity * dt
+dev[:, 2] += g* hammerVelocity * dt
 
 A1 = np.zeros((N,N));
 A2 = np.zeros((N,N));
@@ -89,12 +94,12 @@ def iterate(dev1,dev2,dev3,A1,A2,A3):
 start = timeit.default_timer()
 for i in range(3, len(t)):
     if hammerInteraction:       
-        hammerForce = c.hammerStiffness* abs(hammerDisplacement[i] - dev[int(c.hammerLocation*len(x)),i])**c.hammerExponent
-        hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(c.dt**2*hammerForce)/c.hammerMass
+        hammerForce = hammerStiffness* abs(hammerDisplacement[i] - dev[int(hammerLocation*len(x)),i])**hammerExponent
+        hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(dt**2*hammerForce)/hammerMass
 
-        dev[:,i] += c.dt**2*len(x)*hammerForce*g/(c.density*c.length)
+        dev[:,i] += dt**2*len(x)*hammerForce*g/(density*length)
         
-        if (hammerDisplacement[i]<dev[int(c.hammerLocation*len(x)),i]):
+        if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
             hammerInteraction = False
             
     dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
@@ -104,7 +109,8 @@ for i in range(3, len(t)):
 print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
 
 # Get sound output
-audio = dev[int(c.bridgePos * len(x) ), :];
+bridgePos=.5
+audio = dev[int(bridgePos * len(x) ), :];
 print(len(audio))
 # Normalize and convert
 norm = max(abs(audio));
@@ -119,7 +125,7 @@ p = pyaudio.PyAudio()
 # Output: True of course as we want output
 stream = p.open(format=p.get_format_from_width(c.format),
                 channels=c.numChannels,
-                rate=c.framerate,
+                rate=int(Fs),
                 output=True)
 
 # output sounds
@@ -135,7 +141,7 @@ stream.close()
 print("Calculating and plotting spectrum", flush=True)
 spectrum = scipy.fftpack.fft(audio)
 #spectrum = scipy.fftpack.fft(np.sin(2*np.pi*1000*t))
-freq= np.linspace(0,1/(2*c.dt),len(t)/2)
+freq= np.linspace(0,1/(2*dt),len(t)/2)
 plt.figure()
 plt.plot(freq, np.abs(spectrum[:len(t)/2]))
 
