@@ -3,7 +3,7 @@ import math
 format = 1;  # DUnno what this means
 numChannels = 1;  # = Mono
 
-norm = 5e-4
+norm = 5e-3
 
 def selectParameters(note):    
     youngMod = 2e11
@@ -12,7 +12,7 @@ def selectParameters(note):
     b2 = 2.7e-4
     b3 = 1e-9 #6.25e-9
     tmax = 1
-    Fs = 64e3
+    Fs =int(20e3)
     hammerSize = 0.01
     hammerVelocity = 1
     kap = 1.25

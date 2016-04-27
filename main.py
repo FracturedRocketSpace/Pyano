@@ -32,7 +32,7 @@ def iterate(dev1,dev2,dev3,A1,A2):
 def simulate(note):
     #note = input("input note")
     length, tension, b1, b2, b3, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
-    
+    dx = length/16
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
     
@@ -81,10 +81,10 @@ def simulate(note):
     A2[0,:] = A2[-1,:] = 0;
     A2[1,:] = A2[-2,:] = 0;
     #
-    streamer = sd.OutputStream(channels=1, dtype='float32');
+    streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
     CHUNK = streamer.write_available - 1
     streamer.start()
-    bridgePos = .5
+    bridgePos = 0.01 #.5
     
     # Running the simulation
     start = timeit.default_timer()
