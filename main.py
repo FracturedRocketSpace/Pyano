@@ -26,21 +26,7 @@ def simulate(note):
     
     # Initiate arrays for deviation and velocity
     dev = np.zeros([len(x), len(t)])
-    
-    ## Initial conditino: Strike string with hammer
-    ## Gaussian hammer
-    #mean = c.hammerLocation;
-    #variance = c.hammerSize;
-    #sigma = math.sqrt(variance);
-    #vel[:, 0] = c.hammerVelocity * mlab.normpdf(x, mean, sigma);
-    ## Pulse hammer
-    ## vel[int(c.hammerLocation/c.length*len(x) ): int((c.hammerLocation+c.hammerSize)/c.length*len(x)), 0] = c.hammerVelocity;
-    #
-    ## force for first iteration
-    #dev[:, 0] += vel[:, 0] * c.dt
-    #dev[:, 1] += vel[:, 0] * c.dt
-    #dev[:, 2] += vel[:, 0] * c.dt
-    
+       
     # Create matrices
     D = 1 + b1 * dt + 2 * b3 / dt;
     r = vel * dt / dx;
@@ -53,15 +39,16 @@ def simulate(note):
     a5 = (- b3 / dt) / D;
     
     # Define spatial extent of hammer
+    #GAUSS
     g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))
-    g[0]=0; g[-1]=0;
+    
+    plt.plot(x,g)
+    
+#    g[0]=0; g[-1]=0;
     # Initiate hammer variables
     hammerInteraction = True
     hammerDisplacement = np.zeros([len(t)+1])
     hammerDisplacement[3] = hammerVelocity*dt
-    dev[:, 0] += g* hammerVelocity * dt
-    dev[:, 1] += g* hammerVelocity * dt
-    dev[:, 2] += g* hammerVelocity * dt
     
     A1 = np.zeros((N,N));
     A2 = np.zeros((N,N));
@@ -103,14 +90,14 @@ def simulate(note):
             if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
                 hammerInteraction = False
                 
-        dev[:, i] = iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
+        dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2, A3);
         if(i%1000 == 0):
             print('Now at ', i + 1, 'of the ', len(t));
         
     print("Program ended in  =", int(timeit.default_timer() - start), "seconds");
     
     # Get sound output
-    bridgePos=.5
+    bridgePos=.75
     audio = dev[int(bridgePos * len(x) ), :];
     print(len(audio))
     # Normalize and convert
@@ -152,30 +139,12 @@ def plotSpectrum(audio, dt, t):
     plt.ylabel("Intensity (a.u.)")
     
 
-# plot/animate results: string animation, frequency spectrum
-#X, T = np.meshgrid(x, t)
-
-# fig = plt.figure()
-# ax = fig.gca(projection='3d')
-# surf = ax.plot_surface(X,T ,dev.T, rstride=10, cstride=10,cmap=cm.coolwarm, linewidth=0, antialiased=False)
-# ax.view_init(90, 90); # Top view
-# plt.xlabel("Position")
-# plt.ylabel("Time")
-# plt.title("Implicit method")
-# fig.colorbar(surf, shrink=0.5, aspect=5)
-# Hide z-axis
-# ax.w_zaxis.line.set_lw(0.)
-# ax.set_zticks([])
-
-#plt.figure()
-#plt.plot(t, audio * 127)
-#plt.show()
-
 #UI for playing music
-whiteKeys = np.array(['a','s','d','f','g','h','j']);
+whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
 blackKeys = np.array(['w','e','t','y','u']);
 
-whiteNotes = np.array([40,42,44,45,47,49,51]);
+whiteNotes = np.array([40,42,44,45,47,49,51,52]);
+blackNotes = np.array([41,43,46,48,50])
 
 numWhiteKeys = len(whiteNotes);
 whiteKeyWidth = 10;
@@ -221,7 +190,7 @@ currentKey = 0;
 for n in range(numWhiteKeys-1):
     #if there is a black note between the white notes
     if(whiteNotes[n+1] - whiteNotes[n] != 1):
-        w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: simulate(whiteNotes[n]+1)));
+        w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: simulate(blackNotes[n])));
     
         #bind a keypress and release to the button
         root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
