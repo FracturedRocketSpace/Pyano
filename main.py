@@ -9,7 +9,10 @@ from config import selectParameters
 import locale
 locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
+import datetime
+import queue
+import sys
 
 @jit( nopython=True )
 def iterate(dev1,dev2,dev3,A1,A2,A3):
@@ -22,7 +25,12 @@ def iterate(dev1,dev2,dev3,A1,A2,A3):
     dev[-1] = -dev[-3];    
     return dev
 
-def simulate(note):
+@jit()
+def simulate(pipe):
+    note = pipe.recv()
+    print(note)
+    print(datetime.datetime.now(), flush=True)
+    start = timeit.default_timer()
     #note = input("input note")
     length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
     
@@ -75,8 +83,9 @@ def simulate(note):
     streamer.start()
     bridgePos = int(.5*len(x))
     
+    #
+    print(datetime.datetime.now(), flush=True)
     # Running the simulation
-    start = timeit.default_timer()
     st = 0;
     for i in range(3, len(t)):
         if hammerInteraction:       
@@ -99,6 +108,14 @@ def simulate(note):
     print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds");
 
 if __name__ == '__main__':
+    # Create process queue    
+    q = queue.Queue()
+    for i in range(c.processes):
+        print(i, flush=True)
+        recv, send = Pipe(False);
+        q.put(send);
+        p = Process(target=simulate, args=(recv,));
+        p.start();
     # Functions
     def plotSpectrum(audio, dt, t):
         import matplotlib.pyplot as plt
@@ -114,8 +131,10 @@ if __name__ == '__main__':
         
     def buttonPressed(n):
         print(n);
-        p = Process(target=simulate, args=(n,));
-        p.start();
+        if(q.qsize()==0):
+            sys.exit('Pool empty')
+        send = q.get()
+        send.send(n);
     
     def onPressed(w):
         w.invoke();
