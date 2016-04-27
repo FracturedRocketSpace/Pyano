@@ -9,7 +9,7 @@ from config import selectParameters
 import locale
 locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
-from multiprocessing import Process
+from multiprocessing import Pool
 
 @jit( nopython=True )
 def iterate(dev1,dev2,dev3,A1,A2,A3):
@@ -99,77 +99,77 @@ def simulate(note):
     print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds");
 
 if __name__ == '__main__':
-    # Functions
-    def plotSpectrum(audio, dt, t):
-        import matplotlib.pyplot as plt
-        print("Calculating and plotting spectrum", flush=True)
-        spectrum = scipy.fftpack.fft(audio)
-        freq= np.linspace(0,1/(2*dt),len(t)/2)
-        plt.figure()
-        plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+    with Pool(processes=4) as pool:
+        # Functions
+        def plotSpectrum(audio, dt, t):
+            import matplotlib.pyplot as plt
+            print("Calculating and plotting spectrum", flush=True)
+            spectrum = scipy.fftpack.fft(audio)
+            freq= np.linspace(0,1/(2*dt),len(t)/2)
+            plt.figure()
+            plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+            
+            plt.xlim(20,10000)
+            plt.xlabel("Frequency (Hz)")
+            plt.ylabel("Intensity (a.u.)")
+            
+        def buttonPressed(n):
+            print(n);
+            pool.apply_async(simulate,(n,));
         
-        plt.xlim(20,10000)
-        plt.xlabel("Frequency (Hz)")
-        plt.ylabel("Intensity (a.u.)")
+        def onPressed(w):
+            w.invoke();
+            w.configure(relief='sunken');
         
-    def buttonPressed(n):
-        print(n);
-        p = Process(target=simulate, args=(n,));
-        p.start();
-    
-    def onPressed(w):
-        w.invoke();
-        w.configure(relief='sunken');
-    
-    def onReleased(w):
-        w.configure(relief='raised')    
-    
-    #UI for playing music
-    whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
-    blackKeys = np.array(['w','e','t','y','u']);
-    
-    whiteNotes = np.array([40,42,44,45,47,49,51,52]);
-    
-    numWhiteKeys = len(whiteNotes);
-    whiteKeyWidth = 10;
-    blackKeyWidth = int(whiteKeyWidth/2);
-    whiteKeyHeight = 25;
-    blackKeyHeight = int(whiteKeyHeight/2);
-    
-    #experimentally determined values for char to pixel size conversion
-    charWidth = 7;
-    charHeight = 15;
-    
-    keyBorder = 5;
-    padding = 2;
-    
-    root = tk.Tk();
-    root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
-    root.configure(background='#B22222');
-    
-    #white keys
-    for n in range(numWhiteKeys):
-        w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n])));
-    
-        #bind a keypress and release to the button
-        root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
-        root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
-    
-        #place button within the window
-        w.pack(side='left');
+        def onReleased(w):
+            w.configure(relief='raised')    
         
-    #black keys for middle C upwards
-    currentKey = 0;
-    for n in range(numWhiteKeys-1):
-        #if there is a black note between the white notes
-        if(whiteNotes[n+1] - whiteNotes[n] != 1):
-            w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n]+1)));
+        #UI for playing music
+        whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
+        blackKeys = np.array(['w','e','t','y','u']);
+        
+        whiteNotes = np.array([40,42,44,45,47,49,51,52]);
+        
+        numWhiteKeys = len(whiteNotes);
+        whiteKeyWidth = 10;
+        blackKeyWidth = int(whiteKeyWidth/2);
+        whiteKeyHeight = 25;
+        blackKeyHeight = int(whiteKeyHeight/2);
+        
+        #experimentally determined values for char to pixel size conversion
+        charWidth = 7;
+        charHeight = 15;
+        
+        keyBorder = 5;
+        padding = 2;
+        
+        root = tk.Tk();
+        root.geometry(str(int(numWhiteKeys*(whiteKeyWidth*charWidth+2*(padding+keyBorder+1)))) + "x" + str(int(whiteKeyHeight*charHeight+2*(padding+keyBorder+1))));
+        root.configure(background='#B22222');
+        
+        #white keys
+        for n in range(numWhiteKeys):
+            w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n])));
         
             #bind a keypress and release to the button
-            root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
-            root.bind("<KeyRelease-" + blackKeys[currentKey] + ">", (lambda event, w=w: onReleased(w))); 
-            currentKey += 1;
+            root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
+            root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
+        
+            #place button within the window
+            w.pack(side='left');
             
-            w.place(relx=(n+1)/numWhiteKeys, rely=0.5, anchor='s');
-    
-    root.mainloop();
+        #black keys for middle C upwards
+        currentKey = 0;
+        for n in range(numWhiteKeys-1):
+            #if there is a black note between the white notes
+            if(whiteNotes[n+1] - whiteNotes[n] != 1):
+                w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n]+1)));
+            
+                #bind a keypress and release to the button
+                root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
+                root.bind("<KeyRelease-" + blackKeys[currentKey] + ">", (lambda event, w=w: onReleased(w))); 
+                currentKey += 1;
+                
+                w.place(relx=(n+1)/numWhiteKeys, rely=0.5, anchor='s');
+        
+        root.mainloop();
