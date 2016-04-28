@@ -3,6 +3,8 @@ import math
 format = 1;  # DUnno what this means
 minCHUNK = 1024  # CHUNK load size
 numChannels = 1;  # = Mono
+numProcesses = 8;
+bridgePos = -3;
 
 def selectParameters(note):    
     youngMod = 2e11

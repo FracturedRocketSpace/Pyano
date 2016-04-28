@@ -14,13 +14,13 @@ from multiprocessing import Pool
 @jit( nopython=True )
 def iterate(dev1,dev2,dev3,A1,A2):
     dev = np.dot(A1,dev1) + np.dot(A2,dev2);
-
     # 2nd
     dev[0] = -dev[2];
     dev[-1] = -dev[-3];    
     return dev
 
 def simulate(note):
+    start = timeit.default_timer()
     #note = input("input note")
     length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
     
@@ -76,9 +76,9 @@ def simulate(note):
     #
     streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
     CHUNK = max([streamer.write_available - 1,c.minCHUNK])
-    streamer.start()
-    bridgePos = int(0.8*len(x))
-    
+    streamer.start();
+    print("Initialized note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
+
     # Running the simulation
     start = timeit.default_timer()
     st = 0;
@@ -88,6 +88,8 @@ def simulate(note):
             hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(dt**2*hammerForce)/hammerMass
     
             dev[:,i] += dt**2*len(x)*hammerForce*g/(density*length)
+            # Hammer could move it
+            dev[:,1] = dev[:,-2] = 0;
             
             if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
                 hammerInteraction = False
@@ -96,13 +98,15 @@ def simulate(note):
 
         if ((i + 1) % CHUNK == 0):
             if(st==0):
-                norm = max(abs(dev[bridgePos, st:i]));
-            streamer.write(dev[bridgePos, st:i] / norm);
+                norm = max(abs(dev[c.bridgePos, st:i]));
+            streamer.write(dev[c.bridgePos, st:i] / norm);
             st = i;
-    print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds", flush = True);
+
+    print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
 
 if __name__ == '__main__':
-    with Pool(processes=8) as pool:
+    with Pool(processes=c.numProcesses) as pool:
+
         # Functions
         def plotSpectrum(audio, dt, t):
             import matplotlib.pyplot as plt
