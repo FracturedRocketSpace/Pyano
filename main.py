@@ -119,8 +119,13 @@ def plotSpectrum(audio, dt, t):
     import matplotlib.pyplot as plt
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
-    freq= np.linspace(0,1/(2*dt),len(t)/2)
-    plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+    freq= np.linspace(0,1/(2*dt),len(t)/2)    
+    absSpectrum = np.abs(spectrum);
+    plt.plot(freq, absSpectrum[:len(t)/2])
+    
+    maxIndex = np.argmax(absSpectrum);
+    
+    print("Simulated f0 = " + str(freq[maxIndex]), flush=True);
     
     plt.xlim(20,2500)
     plt.xlabel("Frequency (Hz)")
@@ -144,10 +149,10 @@ if __name__ == '__main__':
         
         
         #UI for playing music
-        whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
-        blackKeys = np.array(['w','e','t','y','u']);
+        whiteKeys = np.array(['A','S','D','F','G','H','J','a','s','d','f','g','h','j','k']);
+        blackKeys = np.array(['W','E', 'T','Y','U','w','e','t','y','u']);
         
-        whiteNotes = np.array([40,42,44,45,47,49,51,52]);
+        whiteNotes = np.array([28,30,32,33,35,37,39,40,42,44,45,47,49,51,52]);
         
         numWhiteKeys = len(whiteNotes);
         whiteKeyWidth = 10;
