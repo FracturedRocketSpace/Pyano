@@ -17,7 +17,56 @@ def selectParameters(note):
     hammerSize = 0.01
     hammerVelocity = 1
     
-    if (note==40):
+    
+    elif (note == 36):
+        #Ab3
+        length = 0.816
+        d = 1.033e-3
+        tension = 759
+
+        hammerExponent = 2.375
+        hammerLocation = 0.098/length
+        hammerMass = 8.96e-3;
+        hammerStiffness = 3.581e9
+        
+        spatialSteps = 50 
+    elif (note == 37):
+        #A3
+        length = 0.773
+        d = 1.027e-3
+        tension = 755
+
+        hammerExponent = 2.385
+        hammerLocation = 0.093/length
+        hammerMass = 8.89e-3;
+        hammerStiffness = 4.047e9
+        
+        spatialSteps = 50 
+    elif (note == 38):
+        #Ad3
+        length = 0.732
+        d = 1.020e-3
+        tension = 751
+
+        hammerExponent = 2.395
+        hammerLocation = 0.088/length
+        hammerMass = 8.83e-3;
+        hammerStiffness = 4.573e9
+        
+        spatialSteps = 50 
+    elif (note == 39):
+        #B3
+        length = 0.694
+        d = 1.013e-3
+        tension = 746
+
+        hammerExponent = 2.406
+        hammerLocation = 0.083/length
+        hammerMass = 8.77e-3;
+        hammerStiffness = 5.168e9
+        
+        spatialSteps = 50 
+    elif (note==40):
         # C4
         length = 0.657
         d = 1.006e-3
