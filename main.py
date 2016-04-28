@@ -103,7 +103,7 @@ def simulate(note):
         iter+=1;
         if (iter % CHUNK == 0):
             if(norm==0.0):
-                norm = max(abs(dev[c.bridgePos]));
+                norm = max(abs(dev[c.bridgePos])) / c.synthMode
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
             if c.spectrum:
@@ -149,10 +149,10 @@ if __name__ == '__main__':
         
         
         #UI for playing music
-        whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
-        blackKeys = np.array(['w','e','t','y','u']);
+        whiteKeys = np.array(['A','S','D','F','G','H','J','a','s','d','f','g','h','j','k']);
+        blackKeys = np.array(['W','E', 'T','Y','U','w','e','t','y','u']);
         
-        whiteNotes = np.array([40,42,44,45,47,49,51,52]);
+        whiteNotes = np.array([28,30,32,33,35,37,39,40,42,44,45,47,49,51,52]);
         
         numWhiteKeys = len(whiteNotes);
         whiteKeyWidth = 10;

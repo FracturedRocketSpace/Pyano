@@ -6,7 +6,7 @@ numChannels = 1;  # = Mono
 numProcesses = 8;
 numTasks = None; # Set to non-zero value to refresh workers periodically
 bridgePos = -3; #Last string segment before end
-
+synthMode = 1; # Decreases norm to create another sound
 spectrum = False;   #Toggle to turn on spectrum calculation and plotting after playing the sound
 
 def selectParameters(note):    
@@ -197,7 +197,7 @@ def selectParameters(note):
     gyradius = d/4
     eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
     #kap = eps * (vel**2) * (length**2)
-    
+
     #loss parameters
     f0 = vel/(2*length)
     b1 = 4.4e-3 * f0 - 4e-2;
