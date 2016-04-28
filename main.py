@@ -173,7 +173,7 @@ if __name__ == '__main__':
         
         #white keys
         for n in range(numWhiteKeys):
-            w = tk.Button(root, borderwidth = keyBorder, background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n])));
+            w = tk.Button(root, borderwidth = keyBorder, text='\n\n\n\n\n\n\n\n\n\n\n\n\n\n'+whiteKeys[n], background='white', height = whiteKeyHeight, width=whiteKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n])));
         
             #bind a keypress and release to the button
             root.bind(whiteKeys[n], (lambda event, w=w: onPressed(w)));
@@ -187,7 +187,7 @@ if __name__ == '__main__':
         for n in range(numWhiteKeys-1):
             #if there is a black note between the white notes
             if(whiteNotes[n+1] - whiteNotes[n] != 1):
-                w = tk.Button(root, borderwidth = keyBorder, background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n]+1)));
+                w = tk.Button(root, borderwidth = keyBorder, text=blackKeys[currentKey], foreground='white', background='black', height = blackKeyHeight, width=blackKeyWidth, command = (lambda n=n: buttonPressed(whiteNotes[n]+1)));
             
                 #bind a keypress and release to the button
                 root.bind(blackKeys[currentKey], (lambda event, w=w: onPressed(w)));
