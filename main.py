@@ -126,10 +126,7 @@ def plotSpectrum(audio, dt, t, note):
     absSpectrum = np.abs(spectrum);
     plt.plot(freq, absSpectrum[:len(t)/2])
     
-    maxIndex = np.argmax(absSpectrum);
-    
-    
-    print("Peak at" , str(freq[maxIndex]) , flush=True);
+    print("Peak at %.f Hz" % freq[np.min(np.where(absSpectrum>3000))] , flush=True);
     plt.xlim(20,2500)
     plt.title(note)
     plt.xlabel("Frequency (Hz)")
