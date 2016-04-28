@@ -6,7 +6,7 @@ numChannels = 1;  # = Mono
 numProcesses = 8;
 numTasks = None; # Set to non-zero value to refresh workers periodically
 bridgePos = -3; #Last string segment before end
-
+synthMode = 1; # Decreases norm to create another sound
 spectrum = False;   #Toggle to turn on spectrum calculation and plotting after playing the sound
 
 def selectParameters(note):    
@@ -196,19 +196,11 @@ def selectParameters(note):
     vel = (tension/density)**.5
     gyradius = d/4
     eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-    kap = eps * (vel**2) * (length**2)
     
     #loss parameters
     f0 = vel/(2*length)
     b1 = 4.4e-3 * f0 - 4e-2;
-    b2 = 1e-6 * f0 + 1e-5;
     b3 = 6.25e-9;
-    
-    print(eps);
-    
-    dt_max = dx**2 * (-4 * b2 + (16 * b2**2 + 4*(vel**2 * dx**2 + 4 * kap**2))**(1/2))/(2*(vel**2*dx**2+4*kap**2))
-    #print("dt: " + str(dt));    
-    #print("max dt: " + str(dt_max));
         
     return length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
     

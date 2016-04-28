@@ -103,7 +103,7 @@ def simulate(note):
         iter+=1;
         if (iter % CHUNK == 0):
             if(norm==0.0):
-                norm = max(abs(dev[c.bridgePos]));
+                norm = max(abs(dev[c.bridgePos])) / c.synthMode
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
             if c.spectrum:
