@@ -107,7 +107,7 @@ def simulate(note):
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
             if c.spectrum:
-                devSave.append(dev[c.bridgePos, :])
+                devSave.append(dev[c.bridgePos, :]/norm)
     print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
     
     if c.spectrum:
@@ -122,7 +122,7 @@ def plotSpectrum(audio, dt, t):
     freq= np.linspace(0,1/(2*dt),len(t)/2)
     plt.plot(freq, np.abs(spectrum[:len(t)/2]))
     
-    plt.xlim(20,10000)
+    plt.xlim(20,2500)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Intensity (a.u.)")
     plt.show()
