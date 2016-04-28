@@ -17,6 +17,109 @@ def selectParameters(note):
     hammerSize = 0.01
     hammerVelocity = 1
     
+    if (note==28):
+        #C3
+        length = 1.259
+        d = 1.063e-3
+        tension = 759
+            
+        hammerExponent = 2.312 
+        hammerLocation = 0.151/length
+        hammerMass = 0.00945
+        hammerStiffness = 1.347e9
+        
+        spatialSteps=50
+        
+    elif (note==29):
+        #Cd3
+        length = 1.192
+        d = 1.061e-3
+        tension = 762
+            
+        hammerExponent = 2.318 
+        hammerLocation = 0.143/length
+        hammerMass = 0.00939
+        hammerStiffness = 1.522e9
+    
+        spatialSteps=50   
+    
+    elif (note==30):
+        #D3
+        length = 1.129
+        d = 1.059e-3
+        tension = 764
+            
+        hammerExponent = 2.325 
+        hammerLocation = 0.136/length
+        hammerMass = 0.00933
+        hammerStiffness = 1.720e9
+        
+        spatialSteps=50
+        
+    elif (note==31):
+        #Dd3
+        length = 1.070
+        d = 1.057e-3
+        tension = 766
+            
+        hammerExponent = 2.332 
+        hammerLocation = 0.128/length
+        hammerMass = 0.00927
+        hammerStiffness = 1.943e9
+
+        spatialSteps=50
+        
+    elif (note==32):
+        #E3
+        length = 1.013
+        d = 1.053e-3
+        tension = 767
+            
+        hammerExponent = 2.339 
+        hammerLocation = 0.122/length
+        hammerMass = 0.00920
+        hammerStiffness = 2.196e9
+
+        spatialSteps=50
+        
+    elif (note==33):
+        #F3
+        length = 0.960
+        d = 1.049e-3
+        tension = 766
+            
+        hammerExponent = 2.347 
+        hammerLocation = 0.115/length
+        hammerMass = 0.00914
+        hammerStiffness = 2.481e9
+
+        spatialSteps=50
+    
+    elif (note==34):
+        #Fd3
+        length = 0.909
+        d = 1.045e-3
+        tension = 765
+            
+        hammerExponent = 2.356 
+        hammerLocation = 0.109/length
+        hammerMass = 0.00908
+        hammerStiffness = 2.804e9
+
+        spatialSteps=50
+    
+    elif (note==35):
+        #Fd3
+        length = 0.861
+        d = 1.039e-3
+        tension = 763
+            
+        hammerExponent = 2.365 
+        hammerLocation = 0.103/length
+        hammerMass = 0.00902
+        hammerStiffness = 3.169e9
+
+        spatialSteps=50
     
     elif (note == 36):
         #Ab3
