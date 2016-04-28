@@ -196,17 +196,17 @@ def selectParameters(note):
     vel = (tension/density)**.5
     gyradius = d/4
     eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-    kap = eps * (vel**2) * (length**2)
+    #kap = eps * (vel**2) * (length**2)
     
     #loss parameters
     f0 = vel/(2*length)
     b1 = 4.4e-3 * f0 - 4e-2;
-    b2 = 1e-6 * f0 + 1e-5;
+    #b2 = 1e-6 * f0 + 1e-5;
     b3 = 6.25e-9;
     
-    print(eps);
+    print("Theoretical f0 = " + str(f0));
     
-    dt_max = dx**2 * (-4 * b2 + (16 * b2**2 + 4*(vel**2 * dx**2 + 4 * kap**2))**(1/2))/(2*(vel**2*dx**2+4*kap**2))
+    #dt_max = dx**2 * (-4 * b2 + (16 * b2**2 + 4*(vel**2 * dx**2 + 4 * kap**2))**(1/2))/(2*(vel**2*dx**2+4*kap**2))
     #print("dt: " + str(dt));    
     #print("max dt: " + str(dt_max));
         

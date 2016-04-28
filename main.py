@@ -119,8 +119,13 @@ def plotSpectrum(audio, dt, t):
     import matplotlib.pyplot as plt
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
-    freq= np.linspace(0,1/(2*dt),len(t)/2)
-    plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+    freq= np.linspace(0,1/(2*dt),len(t)/2)    
+    absSpectrum = np.abs(spectrum);
+    plt.plot(freq, absSpectrum[:len(t)/2])
+    
+    maxIndex = np.argmax(absSpectrum);
+    
+    print("Simulated f0 = " + str(freq[maxIndex]), flush=True);
     
     plt.xlim(20,2500)
     plt.xlabel("Frequency (Hz)")
