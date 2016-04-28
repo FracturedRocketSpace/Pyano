@@ -15,22 +15,32 @@ from multiprocessing import Pool
 def iterate(dev1,dev2,dev3,A1,A2,A3):
     dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
 
-    # 2nd
+    # 2nd boundary condition
     dev[0] = -dev[2];
-    dev[-1] = -dev[-3];    
+    dev[-1] = -dev[-3];
+
     return dev
 
 def simulate(note):
     start = timeit.default_timer()
-    #note = input("input note")
-    length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
-    
+    length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))
+
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
-    
+
     # Save deviation in this list to plot spectrum
     devSave=[];
-    
+
+    # Define spatial extent of hammer
+    #GAUSS
+    g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))
+    g[0]=0; g[-1]=0;
+
+    # Initiate hammer variables
+    hammerInteraction = True
+    hammerDisplacement = np.zeros([len(t)+1])
+    hammerDisplacement[3] = hammerVelocity*dt
+
     # Create matrices
     D = 1 + b1 * dt + 2 * b3 / dt;
     r = vel * dt / dx;
@@ -41,16 +51,6 @@ def simulate(note):
     a3 = (r ** 2 * (1 + 4 * eps * (N ** 2))) / D;
     a4 = (b3 / dt - eps * (N ** 2) * (r ** 2)) / D;
     a5 = (- b3 / dt) / D;
-    
-    # Define spatial extent of hammer
-    #GAUSS
-    g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))    
-    g[0]=0; g[-1]=0;
-    
-    # Initiate hammer variables
-    hammerInteraction = True
-    hammerDisplacement = np.zeros([len(t)+1])
-    hammerDisplacement[3] = hammerVelocity*dt
     
     #compute matrices
     A1 = np.zeros((N,N), dtype='float32');
@@ -83,7 +83,6 @@ def simulate(note):
     norm = 0.0;
     # Done!
     print("Initialized note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
-
     # Running the simulation
     start = timeit.default_timer()
     for i in range(3, len(t)):
@@ -94,16 +93,20 @@ def simulate(note):
             dev[:,iter] = dt**2*len(x)*hammerForce*g/(density*length)
             # Hammer could move it
             dev[1, iter] = dev[-2, iter] = 0;
-            
+            # Stop hammering
             if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
                 hammerInteraction = False
             dev[:, iter] += iterate(dev[:, iter - 1],dev[:, iter - 2],dev[:, iter - 3], A1, A2, A3);
         else:
             dev[:, iter] = iterate(dev[:, iter - 1],dev[:, iter - 2],dev[:, iter - 3], A1, A2, A3);
+
         iter+=1;
+
         if (iter % CHUNK == 0):
             if(norm==0.0):
                 norm = max(abs(dev[c.bridgePos])) / c.synthMode
+            elif(t[i]>c.dampTime):
+                norm *= (1+c.damping*CHUNK)
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
             if c.spectrum:
@@ -112,10 +115,10 @@ def simulate(note):
     
     if c.spectrum:
         audio = np.hstack(devSave)
-        plotSpectrum(audio, dt, t)
+        plotSpectrum(audio, dt, t, note)
 
 # Functions
-def plotSpectrum(audio, dt, t):
+def plotSpectrum(audio, dt, t, note):
     import matplotlib.pyplot as plt
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
@@ -125,29 +128,27 @@ def plotSpectrum(audio, dt, t):
     
     maxIndex = np.argmax(absSpectrum);
     
-    print("Simulated f0 = " + str(freq[maxIndex]), flush=True);
     
+    print("Peak at" , str(freq[maxIndex]) , flush=True);
     plt.xlim(20,2500)
+    plt.title(note)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Intensity (a.u.)")
     plt.show()
-    
-def buttonPressed(n):
-    print(n);
-    pool.apply_async(simulate,(n,));
-
-def onPressed(w):
-    w.invoke();
-    w.configure(relief='sunken');
-
-def onReleased(w):
-    w.configure(relief='raised')    
 
 if __name__ == '__main__':
-    with Pool(processes=c.numProcesses, maxtasksperchild=c.numTasks) as pool:
+    def buttonPressed(n):
+        print("Note: " , n);
+        pool.apply_async(simulate,(n,));
 
-        
-        
+    def onPressed(w):
+        w.invoke();
+        w.configure(relief='sunken');
+
+    def onReleased(w):
+        w.configure(relief='raised')
+
+    with Pool(processes=c.numProcesses, maxtasksperchild=c.numTasks) as pool:
         #UI for playing music
         whiteKeys = np.array(['A','S','D','F','G','H','J','a','s','d','f','g','h','j','k']);
         blackKeys = np.array(['W','E', 'T','Y','U','w','e','t','y','u']);
