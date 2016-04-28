@@ -16,7 +16,6 @@ def selectParameters(note):
     Fs =int(64e3)
     hammerSize = 0.01
     hammerVelocity = 1
-    kap = 1.25
     
     if (note==40):
         # C4
@@ -204,12 +203,9 @@ def selectParameters(note):
     b1 = 4.4e-3 * f0 - 4e-2;
     b2 = 1e-6 * f0 + 1e-5;
     
-    print(b1);
-    print(b2);
-    print(f0);
-    print(kap);
-    
-        
+    dt_max = dx**2 * (-4 * b2 + (16 * b2**2 + 4*(vel**2 * dx**2 + 4 * kap**2))**(1/2))/(2*(vel**2*dx**2+4*kap**2))
+    print("dt: " + str(dt));    
+    print("max dt: " + str(dt_max));
         
     return length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
     
