@@ -6,6 +6,9 @@ numChannels = 1;  # = Mono
 numProcesses = 8;
 bridgePos = -3; #Last string segment before end
 
+spectrum = False;   #Toggle to turn on spectrum calculation and plotting after playing the sound
+
+
 def selectParameters(note):    
     youngMod = 2e11
     rho = 7850

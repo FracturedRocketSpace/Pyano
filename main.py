@@ -25,7 +25,7 @@ def simulate(note):
     length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
     
     #set small x for speed purposes    
-    dx = length/16
+    dx = length/25
     
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
@@ -103,33 +103,40 @@ def simulate(note):
             st = i;
 
     print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
+    
+    if c.spectrum:
+        audio = dev[c.bridgePos, :]
+        plotSpectrum(audio, dt, t)
+
+# Functions
+def plotSpectrum(audio, dt, t):
+    import matplotlib.pyplot as plt
+    print("Calculating and plotting spectrum", flush=True)
+    spectrum = scipy.fftpack.fft(audio)
+    freq= np.linspace(0,1/(2*dt),len(t)/2)
+    plt.figure()
+    plt.plot(freq, np.abs(spectrum[:len(t)/2]))
+    
+    plt.xlim(20,10000)
+    plt.xlabel("Frequency (Hz)")
+    plt.ylabel("Intensity (a.u.)")
+    plt.show()
+    
+def buttonPressed(n):
+    print(n);
+    pool.apply_async(simulate,(n,));
+
+def onPressed(w):
+    w.invoke();
+    w.configure(relief='sunken');
+
+def onReleased(w):
+    w.configure(relief='raised')    
 
 if __name__ == '__main__':
     with Pool(processes=c.numProcesses) as pool:
 
-        # Functions
-        def plotSpectrum(audio, dt, t):
-            import matplotlib.pyplot as plt
-            print("Calculating and plotting spectrum", flush=True)
-            spectrum = scipy.fftpack.fft(audio)
-            freq= np.linspace(0,1/(2*dt),len(t)/2)
-            plt.figure()
-            plt.plot(freq, np.abs(spectrum[:len(t)/2]))
-            
-            plt.xlim(20,10000)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("Intensity (a.u.)")
-            
-        def buttonPressed(n):
-            print(n);
-            pool.apply_async(simulate,(n,));
         
-        def onPressed(w):
-            w.invoke();
-            w.configure(relief='sunken');
-        
-        def onReleased(w):
-            w.configure(relief='raised')    
         
         #UI for playing music
         whiteKeys = np.array(['a','s','d','f','g','h','j','k']);
