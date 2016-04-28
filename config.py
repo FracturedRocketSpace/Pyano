@@ -10,7 +10,7 @@ def selectParameters(note):
     youngMod = 2e11
     rho = 7850
     tmax = 2.5
-    Fs =int(20e3)
+    Fs =int(64e3)
     hammerSize = 0.01
     hammerVelocity = 1
     kap = 1.25

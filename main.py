@@ -12,7 +12,7 @@ import sounddevice as sd
 from multiprocessing import Pool
 
 @jit( nopython=True )
-def iterate(dev1,dev2,dev3,A1,A2):
+def iterate(dev1,dev2,A1,A2):
     dev = np.dot(A1,dev1) + np.dot(A2,dev2);
     # 2nd
     dev[0] = -dev[2];
@@ -24,14 +24,9 @@ def simulate(note):
     #note = input("input note")
     length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))  
     
-    #set small x for speed purposes    
-    dx = length/16
     
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
-    
-    # Initiate arrays for deviation and velocity
-    dev = np.zeros([len(x), len(t)], dtype='float32')
     
     # Create matrices
     la = vel*dt/dx;
@@ -73,35 +68,39 @@ def simulate(note):
     
     A2[0,:] = A2[-1,:] = 0;
     A2[1,:] = A2[-2,:] = 0;
-    #
+    # Start the streamer
     streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
-    CHUNK = max([streamer.write_available - 1,c.minCHUNK])
     streamer.start();
+    CHUNK = max([streamer.write_available - 1,c.minCHUNK])
+    # Initialize deviation vector
+    dev = np.zeros([len(x), CHUNK], dtype='float32')
+    iter = 3;
+    norm = 0.0;
+    # Done!
     print("Initialized note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
 
     # Running the simulation
     start = timeit.default_timer()
-    st = 0;
     for i in range(3, len(t)):
         if hammerInteraction:       
             hammerForce = hammerStiffness* abs(hammerDisplacement[i] - dev[int(hammerLocation*len(x)),i])**hammerExponent
             hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(dt**2*hammerForce)/hammerMass
     
-            dev[:,i] += dt**2*len(x)*hammerForce*g/(density*length)
+            dev[:,iter] = dt**2*len(x)*hammerForce*g/(density*length)
             # Hammer could move it
-            dev[:,1] = dev[:,-2] = 0;
+            dev[1, iter] = dev[-2, iter] = 0;
             
             if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
                 hammerInteraction = False
-                
-        dev[:, i] += iterate(dev[:, i - 1],dev[:, i - 2],dev[:, i - 3], A1, A2);
-
-        if ((i + 1) % CHUNK == 0):
-            if(st==0):
-                norm = max(abs(dev[c.bridgePos, st:i]));
-            streamer.write(dev[c.bridgePos, st:i] / norm);
-            st = i;
-
+            dev[:, iter] += iterate(dev[:, iter - 1],dev[:, iter - 2], A1, A2);
+        else:
+            dev[:, iter] = iterate(dev[:, iter - 1],dev[:, iter - 2], A1, A2);
+        iter+=1;
+        if (iter % CHUNK == 0):
+            if(norm==0.0):
+                norm = max(abs(dev[c.bridgePos]));
+            streamer.write(dev[c.bridgePos] / norm);
+            iter = 0;
     print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
 
 if __name__ == '__main__':
