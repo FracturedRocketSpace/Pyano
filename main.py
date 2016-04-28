@@ -27,6 +27,9 @@ def simulate(note):
     x = np.arange(-dx, length + 2 * dx, dx)
     t = np.arange(0, tmax + dt, dt)
     
+    # Save deviation in this list to plot spectrum
+    devSave=[];
+    
     # Create matrices
     la = vel*dt/dx;
     mu = kap*dt/(dx**2);
@@ -100,10 +103,12 @@ def simulate(note):
                 norm = max(abs(dev[c.bridgePos]));
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
+            if c.spectrum:
+                devSave.append(dev[c.bridgePos, :])
     print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
     
     if c.spectrum:
-        audio = dev[c.bridgePos, :]
+        audio = np.hstack(devSave)
         plotSpectrum(audio, dt, t)
 
 # Functions
@@ -112,7 +117,6 @@ def plotSpectrum(audio, dt, t):
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
     freq= np.linspace(0,1/(2*dt),len(t)/2)
-    plt.figure()
     plt.plot(freq, np.abs(spectrum[:len(t)/2]))
     
     plt.xlim(20,10000)
