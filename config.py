@@ -4,7 +4,7 @@ format = 1;  # DUnno what this means
 minCHUNK = 1024  # CHUNK load size
 numChannels = 1;  # = Mono
 numProcesses = 8;
-bridgePos = -3;
+bridgePos = -3; #Last string segment before end
 
 def selectParameters(note):    
     youngMod = 2e11
@@ -194,6 +194,7 @@ def selectParameters(note):
     vel = (tension/density)**.5
     gyradius = d/4
     eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
+    kap = eps * (vel**2) * (length**2)
     
     #loss parameters
     f0 = vel/(2*length)
@@ -202,6 +203,9 @@ def selectParameters(note):
     
     print(b1);
     print(b2);
+    print(f0);
+    print(kap);
+    
         
         
     return length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
