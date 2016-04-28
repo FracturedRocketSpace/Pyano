@@ -4,6 +4,7 @@ format = 1;  # DUnno what this means
 minCHUNK = 1024  # CHUNK load size
 numChannels = 1;  # = Mono
 numProcesses = 8;
+numTasks = None; # Set to non-zero value to refresh workers periodically
 bridgePos = -3; #Last string segment before end
 
 spectrum = False;   #Toggle to turn on spectrum calculation and plotting after playing the sound

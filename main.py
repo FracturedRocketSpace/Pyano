@@ -11,7 +11,7 @@ locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
 from multiprocessing import Pool
 
-@jit( nopython=True )
+@jit( nopython=True, cache=True )
 def iterate(dev1,dev2,A1,A2):
     dev = np.dot(A1,dev1) + np.dot(A2,dev2);
     # 2nd
@@ -132,7 +132,7 @@ def onReleased(w):
     w.configure(relief='raised')    
 
 if __name__ == '__main__':
-    with Pool(processes=c.numProcesses) as pool:
+    with Pool(processes=c.numProcesses, maxtasksperchild=c.numTasks) as pool:
 
         
         
