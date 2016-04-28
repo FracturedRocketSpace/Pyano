@@ -7,9 +7,7 @@ numChannels = 1;  # = Mono
 def selectParameters(note):    
     youngMod = 2e11
     rho = 7850
-    b1 = 0.5;
-    b2 = 2.7e-4
-    tmax = 1
+    tmax = 2.5
     Fs =int(20e3)
     hammerSize = 0.01
     hammerVelocity = 1
@@ -27,14 +25,7 @@ def selectParameters(note):
         hammerStiffness = 5.840e9 #4.84e9
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+              
     elif (note == 41):
         # Cd4
         length = 0.622
@@ -47,14 +38,7 @@ def selectParameters(note):
         hammerStiffness = 6.599e9
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+            
     elif (note == 42):
         # D4
         length = 0.59
@@ -67,14 +51,7 @@ def selectParameters(note):
         hammerStiffness = 7.457e9
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+              
     elif (note == 43):
         #Dd4   
         length = 0.559
@@ -87,14 +64,7 @@ def selectParameters(note):
         hammerStiffness = 8.427e9
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-
+       
     elif (note == 44):
         #E4
         length = 0.529
@@ -107,14 +77,7 @@ def selectParameters(note):
         hammerStiffness = 9.523e9
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))        
-         
+               
     elif (note==45):
         # F4
         length = 0.501
@@ -127,14 +90,7 @@ def selectParameters(note):
         hammerStiffness = 1.076e10
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 46):
         #Fd4
         length = 0.475
@@ -147,14 +103,7 @@ def selectParameters(note):
         hammerStiffness = 1.216e10
                 
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 47):
         # G4
         length = 0.450
@@ -167,14 +116,7 @@ def selectParameters(note):
         hammerStiffness = 1.374e10
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 48):
         #Ab4
         length = 0.426
@@ -187,14 +129,7 @@ def selectParameters(note):
         hammerStiffness = 1.553e10
         
         spatialSteps = 50 
-        dx = length/spatialSteps
-        dt = 1/Fs        
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))        
-    
+          
     elif (note == 49):
         # A4
         length = 0.404
@@ -207,14 +142,7 @@ def selectParameters(note):
         hammerStiffness = 1.755e10
         
         spatialSteps = 50
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 50):
         #Ad4
         length = 0.383
@@ -227,14 +155,7 @@ def selectParameters(note):
         hammerStiffness = 1.983e10
         
         spatialSteps = 40
-        dx = length/spatialSteps
-        dt = 1/Fs        
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 51):
         # B4
         length = 0.363
@@ -247,14 +168,7 @@ def selectParameters(note):
         hammerStiffness = 2.241e10
         
         spatialSteps = 40
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-        
+                
     elif (note == 52):
         length = 0.344
         d = 0.932e-3
@@ -266,16 +180,27 @@ def selectParameters(note):
         hammerStiffness = 2.532e10
         
         spatialSteps = 40
-        dx = length/spatialSteps
-        dt = 1/Fs
-        
-        density = rho*math.pi/4*d**2
-        vel = (tension/density)**.5
-        gyradius = d/4
-        eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
-    
+           
     else:
         print ("Error: Unknown note")
+        
+    #other parameter calculations
+    dx = length/spatialSteps
+    dt = 1/Fs
+    
+    density = rho*math.pi/4*d**2
+    vel = (tension/density)**.5
+    gyradius = d/4
+    eps = gyradius**2 * (youngMod*math.pi/4*d**2/(tension*length**2))
+    
+    #loss parameters
+    f0 = vel/(2*length)
+    b1 = 4.4e-3 * f0 - 4e-2;
+    b2 = 1e-6 * f0 + 1e-5;
+    
+    print(b1);
+    print(b2);
+        
         
     return length, tension, b1, b2, kap, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel
     

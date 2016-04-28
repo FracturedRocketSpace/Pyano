@@ -77,7 +77,7 @@ def simulate(note):
     streamer = sd.OutputStream(samplerate=Fs, channels=1, dtype='float32');
     CHUNK = max([streamer.write_available - 1,c.minCHUNK])
     streamer.start()
-    bridgePos = int(.5*len(x))
+    bridgePos = int(0.8*len(x))
     
     # Running the simulation
     start = timeit.default_timer()
@@ -99,10 +99,10 @@ def simulate(note):
                 norm = max(abs(dev[bridgePos, st:i]));
             streamer.write(dev[bridgePos, st:i] / norm);
             st = i;
-    print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds");
+    print("Simulated ",tmax, "seconds of note", note, "in", int(timeit.default_timer() - start), "seconds", flush = True);
 
 if __name__ == '__main__':
-    with Pool(processes=4) as pool:
+    with Pool(processes=8) as pool:
         # Functions
         def plotSpectrum(audio, dt, t):
             import matplotlib.pyplot as plt
@@ -159,7 +159,7 @@ if __name__ == '__main__':
             root.bind("<KeyRelease-" + whiteKeys[n] + ">", (lambda event, w=w: onReleased(w)));
         
             #place button within the window
-            w.pack(side='left');
+            w.place(relx=(n+1)/numWhiteKeys, rely=0.0, anchor='ne');
             
         #black keys for middle C upwards
         currentKey = 0;
