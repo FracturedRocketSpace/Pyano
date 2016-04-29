@@ -1,17 +1,19 @@
 import numpy as np
 import tkinter as tk
-import config as c
 import scipy.sparse
 import scipy.fftpack
 import timeit
 from numba import jit
-from config import selectParameters
 import locale
 locale.setlocale(locale.LC_NUMERIC, 'C')
 import sounddevice as sd
 from multiprocessing import Pool
+import matplotlib.pyplot as plt
 
-@jit( nopython=True, cache=True )
+import config as c
+from config import selectParameters
+
+@jit( nopython = True, cache = True )
 def iterate(dev1,dev2,dev3,A1,A2,A3):
     dev = np.dot(A1,dev1) + np.dot(A2,dev2) + np.dot(A3,dev3);
 
@@ -22,7 +24,10 @@ def iterate(dev1,dev2,dev3,A1,A2,A3):
     return dev
 
 def simulate(note):
+    # Start timer for initialisation
     start = timeit.default_timer()
+    
+    # Get parameters from config file
     length, tension, b1, b3, hammerExponent, hammerLocation, hammerMass, hammerStiffness, hammerSize, hammerVelocity, dx, tmax, Fs, dt, density, eps, vel = selectParameters(int(note))
 
     x = np.arange(-dx, length + 2 * dx, dx)
@@ -33,15 +38,15 @@ def simulate(note):
 
     # Define spatial extent of hammer
     #GAUSS
-    g = np.exp(- (x-hammerLocation*length)**2/ (2*hammerSize**2))
-    g[0]=0; g[-1]=0;
+    g = np.exp( - (x - hammerLocation * length)**2 / (2 * hammerSize**2))
+    g[0] = 0; g[-1] = 0;
 
     # Initiate hammer variables
     hammerInteraction = True
-    hammerDisplacement = np.zeros([len(t)+1])
-    hammerDisplacement[3] = hammerVelocity*dt
+    hammerDisplacement = np.zeros([len(t) + 1])
+    hammerDisplacement[3] = hammerVelocity * dt
 
-    # Create matrices
+    # Compute matrix entry values
     D = 1 + b1 * dt + 2 * b3 / dt;
     r = vel * dt / dx;
     N = len(x)
@@ -52,7 +57,7 @@ def simulate(note):
     a4 = (b3 / dt - eps * (N ** 2) * (r ** 2)) / D;
     a5 = (- b3 / dt) / D;
     
-    #compute matrices
+    # Construct matrices
     A1 = np.zeros((N,N), dtype='float32');
     A2 = np.zeros((N,N), dtype='float32');
     A3 = np.zeros((N,N), dtype='float32');
@@ -83,56 +88,63 @@ def simulate(note):
     norm = 0.0;
     # Done!
     print("Initialized note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
+    
     # Running the simulation
     start = timeit.default_timer()
     for i in range(3, len(t)):
         if hammerInteraction:       
-            hammerForce = hammerStiffness* abs(hammerDisplacement[i] - dev[int(hammerLocation*len(x)),i])**hammerExponent
-            hammerDisplacement[i+1]=2*hammerDisplacement[i]-hammerDisplacement[i-1]-(dt**2*hammerForce)/hammerMass
-    
-            dev[:,iter] = dt**2*len(x)*hammerForce*g/(density*length)
+            hammerForce = hammerStiffness * abs( hammerDisplacement[i] - dev[int(hammerLocation*  len(x)),i] )**hammerExponent
+            hammerDisplacement[i+1] = 2 * hammerDisplacement[i] - hammerDisplacement[i-1] - (dt**2 * hammerForce) / hammerMass
+            # Wire deviation due to hammer interaction
+            dev[:,iter] = dt**2 * len(x) * hammerForce * g / (density * length)
             # Hammer could move it
             dev[1, iter] = dev[-2, iter] = 0;
             # Stop hammering
-            if (hammerDisplacement[i]<dev[int(hammerLocation*len(x)),i]):
+            if ( hammerDisplacement[i] < dev[int(hammerLocation * len(x)),i] ):
                 hammerInteraction = False
+            # Wire deviation due to other terms
             dev[:, iter] += iterate(dev[:, iter - 1],dev[:, iter - 2],dev[:, iter - 3], A1, A2, A3);
         else:
             dev[:, iter] = iterate(dev[:, iter - 1],dev[:, iter - 2],dev[:, iter - 3], A1, A2, A3);
 
         iter+=1;
-
+        # Play sound if enough sound samples are generated
         if (iter % CHUNK == 0):
-            if(norm==0.0):
+            # Compute normalasation factor
+            if(norm == 0.0):
                 norm = max(abs(dev[c.bridgePos])) / c.synthMode
-            elif(t[i]>c.dampTime):
-                norm *= (1+c.damping*CHUNK)
+            elif(t[i] > c.dampTime):
+                norm *= (1 + c.damping * CHUNK)
+            # Play sound and reset iter
             streamer.write(dev[c.bridgePos] / norm);
             iter = 0;
+            # Save sound samples if spectrum is required
             if c.spectrum:
-                devSave.append(dev[c.bridgePos, :]/norm)
+                devSave.append(dev[c.bridgePos,:] / norm)
     print("Simulated ",tmax, "seconds of note", note, "in", timeit.default_timer() - start, "seconds", flush=True);
     
+    # Construct vector containing all sound samples and plot spectrum
     if c.spectrum:
         audio = np.hstack(devSave)
         plotSpectrum(audio, dt, t, note)
 
 # Functions
 def plotSpectrum(audio, dt, t, note):
-    import matplotlib.pyplot as plt
     print("Calculating and plotting spectrum", flush=True)
     spectrum = scipy.fftpack.fft(audio)
-    freq= np.linspace(0,1/(2*dt),len(t)/2)    
     absSpectrum = np.abs(spectrum);
-    plt.plot(freq, absSpectrum[:len(t)/2])
+    freq= np.linspace(0, 1/(2*dt), len(t)/2)  
     
-    print("Peak at %.f Hz" % freq[np.min(np.argmax(absSpectrum[0:1.5*np.min(np.argwhere(absSpectrum>3000))]))] , flush=True);
+    print("Fundamental frequency peak at %.f Hz" % freq[np.min( np.argmax( absSpectrum[ 0 : 1.5 * np.min(np.argwhere(absSpectrum > 3000)) ] ) )] , flush=True);
+
+    plt.plot(freq, absSpectrum[:len(t)/2])
     plt.xlim(20,2500)
     plt.title(note)
     plt.xlabel("Frequency (Hz)")
     plt.ylabel("Intensity (a.u.)")
     plt.show()
 
+# Create keyboard with keys to run simulation
 if __name__ == '__main__':
     def buttonPressed(n):
         print("Note: " , n);
@@ -180,7 +192,7 @@ if __name__ == '__main__':
             #place button within the window
             w.place(relx=(n+1)/numWhiteKeys, rely=0.0, anchor='ne');
             
-        #black keys for middle C upwards
+        #black keys
         currentKey = 0;
         for n in range(numWhiteKeys-1):
             #if there is a black note between the white notes
